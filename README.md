@@ -1,13 +1,13 @@
 # 🧭 Daily Compass
 
-> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit (v2.0.0 Pro Max)**  
+> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit (v2.1.0 Pro Max Plus)**  
 > *Engineered for ADHD, time blindness, executive dysfunction, and sensory sensitivity.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version: v2.0.0 Pro Max](https://img.shields.io/badge/Version-v2.0.0%20Pro%20Max-indigo.svg)](CHANGELOG.md)
+[![Version: v2.1.0 Pro Max Plus](https://img.shields.io/badge/Version-v2.1.0%20Pro%20Max%20Plus-indigo.svg)](CHANGELOG.md)
 [![Zero Dependencies](https://img.shields.io/badge/Runtime%20Dependencies-0-success.svg)](package.json)
 [![Offline First](https://img.shields.io/badge/Architecture-Local--First%20PWA-brightgreen.svg)](sw.js)
-[![Tests Passing](https://img.shields.io/badge/Node.js%20Tests-48%2F48%20Pass-brightgreen.svg)](tests/test_full_suite.js)
+[![Tests Passing](https://img.shields.io/badge/Node.js%20Tests-54%2F54%20Pass-brightgreen.svg)](tests/test_full_suite.js)
 
 ---
 
@@ -18,14 +18,15 @@ Most productivity suites fail the people who need them most. When you live with 
 - **Deep multi-screen forms** create cognitive friction and decision paralysis.
 - **Jarring klaxon alarms** induce cortisol spikes and panic.
 - **Fragmented tools** (separate apps for alarms, habits, hydration, meds, spending, notes) force constant context-switching, evaporating your fragile working memory.
+- **Shoulder-surfing anxiety in public** (coffee shops, public transit, shared offices) prevents you from opening financial ledgers and private brain dumps.
 
-**Daily Compass v2.0 Pro Max** is an all-in-one cognitive prosthetic and daily life dashboard. Built from the ground up as an unshakeable ground truth, it anchors you into the present moment within 500 milliseconds of looking at the screen.
+**Daily Compass v2.1.0 Pro Max Plus** is an all-in-one cognitive prosthetic and daily life dashboard. Built from the ground up as an unshakeable ground truth, it anchors you into the present moment within 500 milliseconds of looking at the screen.
 
 ```
 +-----------------------------------------------------------------------------------------------+
-| [🧭 Daily Compass]  14:23:10 Wed, Nov 5  [⚡ 60% Spoon]  [Cmd+K Omnibar]  [🧘 Lost? Reset]   |
+| [🧭 Daily Compass]  14:23:10 Wed, Nov 5  [⚡ 60% Spoon]  [👁️ Peek Privacy]  [Cmd+K Omnibar]     |
 | CURRENT BLOCK: Afternoon Deep Focus (Ends in 37m)   [NEXT: Stretch & Hydrate]                 |
-| [⏳ Shift Schedule:  +15m  |  +30m  |  +1h  |  Snap to Now ]                                   |
+| [⏳ Shift Schedule:  +15m  |  +30m  |  +1h  |  Snap to Now ]   [✏️ Edit Routine Blocks]        |
 +-----------------------------------------------------------------------------------------------+
 | [ 1. Today ]  [ 2. Cash ]  [ 3. Debts ]  [ 4. Habits ]  [ 5. Notes ]  [ 6. Settings ]         |
 +-----------------------------------------------------------------------------------------------+
@@ -35,117 +36,97 @@ Most productivity suites fail the people who need them most. When you live with 
 
 ---
 
-## ✨ What's New in v2.0 Pro Max
+## ✨ What's New in v2.1.0 Pro Max Plus
 
-Daily Compass v2.0 Pro Max introduces **10 powerful neurodivergent-tailored modules** while strictly preserving its zero-dependency, local-first, lightweight architecture:
+Daily Compass v2.1.0 introduces **Temporal Sculpting**, **Sanctuary Privacy**, **Markdown Day Journals**, and **7-Day Rolling Trend Archiving** while remaining 100% zero-dependency and local-first:
 
-### 1. ⚡ Energy Battery Gauge (Spoon Theory & Gentle Mode)
+### 1. ✏️ Interactive Routine Block & Micro-Step Editor
+- **Tactile Temporal Sculpting:** Directly create, edit, reorder, and delete daily routine blocks without touching raw JSON.
+- **Live Duration Telemetry:** Start and end time inputs compute real-time durations (e.g. `⏱ 1h 30m`), eliminating mental math.
+- **Cross-Midnight Overnight Support:** Seamlessly schedules blocks that span past midnight (e.g. `23:15` to `01:45` = `2h 30m`) with automatic crescent badge indicators (`🌙 Overnight`).
+- **Category Mode Pills:** Choose from 6 sensory modes: **Focus** (`#4a7bb0`), **Rest** (`#60cd9b`), **Nourishment** (`#e5a960`), **Routine** (`#9aa5b5`), **Creative** (`#bc8cff`), and **Movement** (`#38bdf8`).
+- **Ordered Micro-Steps Builder:** Break down overwhelming blocks into atomic micro-actions with drag-and-drop grips (`⋮⋮`) and touch-ergonomic `[↑]` / `[↓]` move buttons.
+- **1-Tap Auto-Balance Durations:** The `🪄 Auto-Balance` button automatically divides total block duration evenly across all micro-steps.
+- **Non-Punitive Soft Guidance:** Overlapping routines or step overflows display gentle amber notices rather than disabled buttons.
+- **Safe Anchor Fallback:** Deleting an active routine automatically transitions Anchor to the next chronological routine without crashing.
+
+### 2. 🛡️ Sanctuary Privacy Vault & Balance Masking
+- **1-Keystroke "Peek Privacy" (`Alt + M`):** Instantly obscures all financial figures (Daily Cap, Safe-to-Spend, Cash Transactions, Debts, Subscriptions) and private journal notes behind a frosted slate Gaussian blur (`backdrop-filter: blur(8px)`).
+- **Hover-to-Peek:** Hovering over a masked value temporarily clarifies it without unmasking the entire screen.
+- **Local Numeric PIN Vault (Web Crypto SHA-256):** Secure sensitive views behind a 4-to-8 digit PIN hashed with a cryptographically random 16-byte salt via the native Web Crypto API. The plaintext PIN is never stored.
+- **Auto-Lock on Tab Switch:** Automatically locks or masks the dashboard as soon as you switch tabs or minimize the browser (`visibilitychange`).
+- **Compassionate Exponential Backoff:** Non-punitive rate limiting (15s cooldown at 3 fails, 60s at 5 fails, 300s at 7 fails) with gentle card shake animations instead of loud sirens.
+- **Emergency Reset Guarantee:** If you forget your PIN, typing `"reset vault"` removes the PIN lock **without erasing your data**. You are never punished with data loss.
+
+### 3. 📝 Daily Scratchpad Markdown Journal & CSV Exporter
+- **1-Click Markdown Day Journal (`.md`):** Exports a beautifully formatted, structured Markdown day log ready to paste into **Obsidian**, **Notion**, **Logseq**, or **Roam Research**. Includes energy levels, hydration, medications checklist, routine completion tallies, safe-to-spend balance, and scratchpad thoughts.
+- **Standard Financial CSV Export (`.csv`):** 1-click export of all cash transactions formatted to RFC-4180 (`Date,Time,Type,Category,Amount,Note`) for Excel, Google Sheets, or ledger tools.
+
+### 4. 📊 7-Day Rolling Trend Archive & Adherence Metrics
+- **Automated Summary Archiving:** Daily metrics (water intake, medications taken, habit adherence, and spending) are automatically archived into a rolling 14-day history.
+- **Weekly Trend Telemetry:** Real-time averages compute:
+  - 💧 Average daily water consumption (`avgWaterMl`).
+  - 💳 Average daily spend (`avgDailySpend`).
+  - 🌿 Overall habit adherence percentage (`habitAdherenceRate`).
+
+---
+
+## ✨ v2.0 Pro Max Foundational Features
+
+### ⚡ Energy Battery Gauge (Spoon Theory & Gentle Mode)
 - **Visual Spoon Battery:** Direct visual biofeedback tracking energetic reserves across three discrete states: **100% High**, **60% Medium**, and **20% Low / Depleted**.
 - **Automatic Gentle Mode:** Dropping to $\le 20\%$ automatically engages **Gentle Mode**—hiding aggressive goals, stripping away non-essential routine blocks, softening UI contrast, and automatically deploying streak shields.
 - **Quick Keyboard Cycle:** Press `E` anywhere outside text fields to cycle energy states in 1 tap.
 
-### 2. 💧 Pure SVG Hydration Ring & Droplet Logger
+### 💧 Pure SVG Hydration Ring & Droplet Logger
 - **Circular SVG Progress Gauge:** Real-time visual representation of daily water intake towards your target (e.g. 2,000ml).
 - **1-Tap Quick-Log Pills:** Instantly record $+250\text{ml}$ or $+500\text{ml}$ with a single tap.
 - **Synthesized Water Droplet Chime:** Tactile acoustic confirmation with custom pitch-swept droplet frequency modulation ($600\text{Hz} \to 1400\text{Hz} \to 800\text{Hz}$).
-- **Boundary Capping & Undo:** Includes 1-tap **Undo** for mis-taps and safety clamping at $6,000\text{ml}$ to avoid input errors.
+- **Boundary Capping & Undo:** Includes 1-tap **Undo** for mis-taps and safety clamping at $6,000\text{ml}$.
 
-### 3. 💊 Medication Checklist with Double-Dose Safety Lock
+### 💊 Medication Checklist with Double-Dose Safety Lock
 - **Visual Ingestion Record:** Chronological slots (Morning, Afternoon, Evening) with dosage notes and food indicators.
-- **Double-Dose Prevention:** When marked taken, the medication card visually locks with a persistent timestamp (`Taken at HH:MM`) and dimmed styling. This eliminates the frantic *"Did I take my meds 5 minutes ago?"* working-memory panic.
+- **Double-Dose Prevention:** When marked taken, the medication card visually locks with a persistent timestamp (`Taken at HH:MM`) and dimmed styling, eliminating the frantic *"Did I take my meds 5 minutes ago?"* panic.
 - **1-Tap Safe Reversal:** Toggleable if checked by error, cleanly clearing timestamp and resetting status.
 
-### 4. ⏳ Schedule Quick-Shift Elastic Engine
-- **Anti-Derailment Control:** Running 20 minutes late often causes an "all-or-nothing" psychological surrender where the entire day is abandoned.
+### ⏳ Schedule Quick-Shift Elastic Engine
+- **Anti-Derailment Control:** Running late often causes an "all-or-nothing" psychological surrender where the entire day is abandoned.
 - **Elastic Shifting:** 1-tap buttons (`+15m`, `+30m`, `+1h`, `Snap to Now`) push all remaining routine blocks forward in time.
 - **Bedtime Boundary Protection:** Times automatically clamp at $23:59$ to safeguard sleep hygiene.
 - **Toast Undo:** Includes a 5-second undo toast allowing instantaneous reversal if clicked accidentally.
 
-### 5. 🎯 Focus Sprint Timer & Procedural Ambient Soundscapes
+### 🎯 Focus Sprint Timer & Procedural Ambient Soundscapes
 - **Adjustable Sprint Blocks:** 15-minute quick sprint, 25-minute Pomodoro, or 50-minute deep-work session.
 - **Zero MP3 / Zero Asset Audio:** Continuous ambient soundscapes procedurally synthesized in real time via the Web Audio API:
   - 🌧️ **Pink Rain:** Paul Kellet's $-3\text{dB}/\text{octave}$ 6-pole filter paired with an $1100\text{Hz}$ biquad lowpass filter and $0.08\text{Hz}$ LFO wind swell.
   - 🧠 **10Hz Alpha Waves:** Binaural beat generator ($200\text{Hz}$ Left ear / $210\text{Hz}$ Right ear with $-0.9/+0.9$ stereo panning) targeting relaxed cortical alpha rhythm ($8\text{–}12\text{Hz}$) for ADHD focus.
   - 🧘 **Tibetan Drone:** Quad-layer harmonic singing bowl drone ($108\text{Hz}, 216\text{Hz}, 324\text{Hz}, 432\text{Hz}$) with subtle acoustic detuning.
 
-### 6. ⌨️ Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)
+### ⌨️ Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)
 - **Instant Keyboard Navigation:** Press `Cmd + K` (Mac) or `Ctrl + K` (Windows/Linux) from any view.
 - **Prefix Command Handlers:**
   - `$ 14 lunch` $\to$ Instantly logs a $\$14.00$ lunch expense.
   - `+h 500` $\to$ Logs $500\text{ml}$ hydration.
   - `+shift 30` $\to$ Advances schedule routines by 30 minutes.
   - `+bat low` / `+bat med` / `+bat high` $\to$ Sets Energy Battery.
+  - `+mask` $\to$ Toggles Peek Privacy balance masking.
   - `+zen` $\to$ Opens 4-7-8 Breathing Grounding Calmer.
 - **Fuzzy Cross-Module Search:** Instant search across habits, debt counterparties, notes, and routine schedules.
 
-### 7. 💳 Recurring Subscriptions & End-of-Month Cash Buffer
+### 💳 Recurring Subscriptions & End-of-Month Cash Buffer
 - **Fixed Overhead Tracker:** Manage monthly recurring subscriptions (Cloud, Gym, Broadband, Software) with renewal dates and 1-tap "Log Paid" markers.
 - **Buffer Forecast Algorithm:** Real-time equation calculating your projected surplus or deficit:
   $$\text{Buffer} = \text{Monthly Pool} - \text{Spent So Far} - \text{Pending Subs} - (\text{Remaining Days} \times \text{Daily Cap})$$
 - **Semantic Posture:** Color-coded status badges: **Comfort** (surplus projected), **Tight** ($\le 1\text{ day allowance}$), or **Deficit** (burn rate exceeds monthly pool).
 
-### 8. 📊 Pure SVG Activity Heatmap & Category Donut Chart
+### 📊 Pure SVG Activity Heatmap & Category Donut Chart
 - **7-Day Rolling Habit Heatmap:** Zero-dependency inline SVG weekly consistency grid showing individual habit completions across the past 7 days.
 - **Expense Breakdown Donut:** Pure SVG circle dash-array graphic displaying category percentages (Food, Coffee, Transit, Groceries, Bills, Misc) without chart libraries.
 
-### 9. 🛡️ 7-Day Rolling Snapshots (Time-Machine Recovery)
-- **Local Automated Safety Net:** Automatically creates daily baseline checkpoints at midnight and during critical mutations.
+### 🛡️ 7-Day Rolling Snapshots (Time-Machine Recovery)
+- **Local Automated Safety Net:** Automatically creates daily baseline checkpoints at midnight and pre-mutation checkpoints before deleting routines.
 - **FIFO Rotation:** Capped at 12 rolling snapshots (7 daily baselines + 5 user-created checkpoints) to ensure compact local storage.
 - **1-Click Rollback:** Preview and restore previous snapshots with zero data loss.
-
----
-
-## ✨ Core Foundational Features
-
-### 🕒 "Where Am I Right Now?" Master Anchor
-- **Live Master Clock:** High-legibility precision clock toggleable between 12-hour (with AM/PM) and 24-hour military formats, accompanied by full weekday and date display.
-- **Active Routine Block Detection:** Dynamically calculates which schedule block you are currently in and displays remaining minutes.
-- **Immediate Micro-Step:** Highlights the single next physical action to eliminate choice paralysis.
-- **Day Progress Bar:** Visual indicator showing elapsed percentage of the 24-hour cycle.
-
-### 🫁 4-7-8 Grounding Engine ("Lost? Click to Center")
-- One-click emergency cognitive reset accessible from both header and sidebar.
-- **Diaphragmatic Breathing Pacer:** Real-time visual and text guidance for 4-second Inhale, 7-second Gentle Hold, and 8-second Slow Exhale to down-regulate the nervous system during panic or paralysis.
-- **Compassionate Re-Entry:** 1-tap options:
-  - **15-Minute Breather:** Delays upcoming notifications so you can regroup without guilt.
-  - **Re-Align Schedule:** Gently clears past unfinished routine steps and anchors your focus to the current hour.
-  - **Rest Mode:** Strips away non-essential tasks for low-energy recovery days.
-
-### 💳 Daily Cash Compass & Safe-to-Spend
-- **Safe-to-Spend Today Gauge:** Instant calculation of daily spending allowance minus expenses logged today.
-- **Visual Budget Fill:** Real-time color-coded bar (Sage Green $< 80\%$, Warm Amber $80\text{–}100\%$, Rose Red $> 100\%$).
-- **Zero-Friction 1-Tap Expense Pills:** Log common expenses ($3 Coffee, $8 Lunch, $15 Dinner, $5 Transit) in a single tap without opening modal dialogues.
-- **Clean Transaction Ledger:** Filter by All, Expenses, or Income with instant search and one-click deletion.
-
-### 🤝 "Who Owes Who?" Bilateral Debt Ledger
-- **Lent & Borrowed Separation:** Distinct tabs for *"They Owe Me"* (Receivables) and *"I Owe Them"* (Payables).
-- **Net Balance Banner:** Instant calculation showing your net financial posture ($+\$40.00$ or $-\$25.00$).
-- **Partial & Full Settlement Modal:** Input partial payback amounts; remaining balance recalculates automatically, clamping to $0 and updating status to `settled`.
-
-### 🛡️ Micro-Habits & Zero-Shame Streak Shields
-- **Zero-Shame Consistency:** Missing a day does not delete your hard-earned progress. 
-- **Streak Shields:** Protects streaks during illness, travel, or sensory exhaustion.
-- **Time-of-Day Filter:** Group habits into Morning, Afternoon, Evening, or Anytime to keep lists compact.
-- **1-Tap Check:** Immediate auditory micro-tick feedback upon completion.
-
-### 📝 Scratchpad & Brain Dump Wall
-- **Working Memory Safeguard:** Instant capture field for fleeting thoughts, to-dos, shopping needs, or random ideas before they derail current tasks.
-- **Tag Filtering:** Filter by `All`, `Idea`, `To-Buy`, `To-Do`, or `Later`.
-- **1-Click Conversions:** Convert any raw note directly into a tracked **Habit** or a **Cash Expense** with one click.
-
-### 🔔 Synthesized Web Audio Chimes (100% Self-Contained)
-- **Zero External Audio Files:** Synthesized entirely in code via the browser's native **Web Audio API**.
-- **Soothing Harmonic Presets:**
-  - 🧘 **Zen Singing Bowl:** 432 Hz fundamental with acoustic overtone beating (warm, grounding).
-  - 🎵 **Gentle Triad:** C-major arpeggio (C5, E5, G5) with bell envelopes.
-  - 🛎️ **Attentive Bell:** Crisp two-stage harmonic ping for timely reminders.
-  - 🪵 **Micro-Tick:** 20ms wooden percussive snap for tactile UI click feedback.
-  - 💧 **Water Drop:** Frequency-modulated pitch droplet for hydration logging.
-- **Smooth Volume Clamping:** Safe envelope gain ramping eliminates startle reflexes.
-
-### 🎯 Focus Mode ("One Thing at a Time")
-- Press `F` or tap the **Focus** button to collapse navigation chrome, headers, and secondary modules.
-- Leaves only the active routine block, current micro-step, and safe-to-spend gauge visible on screen.
 
 ---
 
@@ -155,8 +136,9 @@ The Daily Compass user interface is intentionally engineered to prevent sensory 
 
 | Design Dimension | Implementation Detail | Cognitive / Sensory Benefit |
 | :--- | :--- | :--- |
-| **Dark Calm Palette** | Canvas: `#0d1117`, Cards: `#161b22`, Borders: `#30363d` | Low-luminance dark canvas minimizes optical strain and evening blue-light melatonin suppression. |
-| **Muted Semantic Accents** | Sky (`#58a6ff`), Sage (`#3fb950`), Amber (`#d29922`), Rose (`#f85149`), Lavender (`#bc8cff`) | Vibrant enough for instant visual scanning; desaturated enough to avoid sensory alarm. |
+| **Nordic Twilight Palette** | Canvas: `#181c24`, Cards: `#222734`, Elevated: `#2b3242`, Borders: `#2d3546` | Low-luminance dark canvas eliminates optical strain and prevents evening blue-light melatonin suppression. |
+| **Muted Semantic Accents** | Cobalt (`#4a7bb0`), Sage (`#60cd9b`), Amber (`#e5a960`), Rose (`#d9777f`), Violet (`#bc8cff`), Cyan (`#38bdf8`) | Vibrant enough for instant visual scanning; desaturated enough to avoid sensory alarm. |
+| **Peek Privacy Blurs** | Frosted slate Gaussian blur (`backdrop-filter: blur(8px)`) with hover-to-peek | Complete freedom to open the app in public without shoulder-surfing anxiety. |
 | **Typography Hierarchy** | Inter / System UI paired with JetBrains Mono for financial & time figures | High-legibility tabular numbers prevent digit hopping when scanning budgets. |
 | **Generous Hit Targets** | Minimum $44 \times 44\text{px}$ touch targets on mobile and desktop | Reduces mis-taps and frustration during motor fatigue or trembling. |
 | **Soft Motion** | $200\text{ms}$ cubic-bezier transitions; respects `prefers-reduced-motion` | Smooth visual transitions without dizzying parallax or jarring flashes. |
@@ -223,7 +205,7 @@ In your local project folder:
 ```bash
 git init
 git add .
-git commit -m "Release Daily Compass v2.0.0 Pro Max"
+git commit -m "Release Daily Compass v2.1.0 Pro Max Plus"
 ```
 
 ### Step 2: Push to GitHub
@@ -254,30 +236,32 @@ git commit -m "Release Daily Compass v2.0.0 Pro Max"
 
 - **100% Client-Side:** No accounts, no email signups, no analytics trackers, no advertising beacons.
 - **Zero Third-Party Cloud Dependencies:** Your finances, habits, notes, and schedules never leave your device.
+- **Sanctuary Privacy Vault:** Optional 4-to-8 digit PIN with Web Crypto SHA-256 + 16-byte random salt.
 - **Full JSON Backup & Restore:**
   - Export your entire database anytime via **Settings $\rightarrow$ Export Backup JSON**.
   - Restore on another device via **Settings $\rightarrow$ Import Backup JSON** with support for clean overwrite or non-destructive merge.
-- **7-Day Rolling Snapshots:** Automated local snapshots retain 12 historical states for 1-click time-machine recovery.
+- **Markdown & CSV Portability:** Export your daily journal to Markdown and transactions to CSV anytime.
 
 ---
 
 ## 🧪 Automated Testing
 
-Daily Compass includes 48 automated unit and integration tests executing natively on Node.js using `node:test` (zero testing dependencies like Jest or Mocha required):
+Daily Compass includes **54 automated unit and integration tests** executing natively on Node.js using `node:test` (zero testing dependencies like Jest or Mocha required):
 
 ```bash
 # Execute comprehensive full test suite
 node --test tests/test_subsystems.js tests/test_full_suite.js
 ```
 
-### Test Suite Summary (48/48 Passing)
+### Test Suite Summary (54/54 Passing Across 10 Suites)
 - ✅ **Suite 1: Store Initialization & Schemas (5 tests):** Validates top-level modules, settings/profile synchronization, routine bounds, alarm schemas, and state immutability.
 - ✅ **Suite 2: CRUD Operations & Reactivity (5 tests):** Validates item additions with UUID generation, targeted updates, deletions, and subscriber state notifications.
 - ✅ **Suite 3: Calculation Logic (7 tests):** Validates daily safe-to-spend calculations, overspend calculations, bilateral debt balances, partial and full debt settlements, habit streak math, alarm trigger matching, and routine block time matching.
 - ✅ **Suite 4: Export & Import Portability (3 tests):** Validates JSON serialization against schema, full state Overwrite mode, and ID-keyed Merge mode.
 - ✅ **Suite 5: Edge Cases & Resilience (6 tests):** Validates zero division protection ($cap = 0$), LocalStorage quota exhaustion fallback, corrupt JSON import rejection, missing field auto-sanitization, timezone/daylight saving boundaries, and debt over-settlement zero-clamping.
 - ✅ **Suite 6: Web Audio API Sound Synthesizer (4 tests):** Validates harmonic preset availability, error-free preset execution, alarm loop lifecycle tracking, and master volume bounds clamping ($[0.0, 1.0]$).
-- ✅ **Suite 7: v2.0 Pro Max Expansion Subsystems (7 tests):** Validates hydration additions, undo, and $6000\text{ml}$ boundary capping; medication toggle and timestamp recording; Energy Battery Spoon level and auto Gentle Mode trigger at $\le 20\%$; Schedule Quick-Shift chronological advancing and undo; End-of-Month cash buffer projection formula; rolling snapshot creation, FIFO rotation, and restoration; procedural ambient soundscape generation and tracking.
+- ✅ **Suite 7: v2.0 Pro Max Expansion Subsystems (7 tests):** Validates hydration additions, undo, and $6000\text{ml}$ boundary capping; medication toggle and timestamp recording; Energy Battery Spoon level and auto Gentle Mode trigger; Schedule Quick-Shift chronological advancing and undo; End-of-Month cash buffer projection formula; rolling snapshot creation, FIFO rotation, and restoration; procedural ambient soundscape generation and tracking.
+- ✅ **Suite 8: v2.1 Pro Max Plus Subsystems (6 tests):** Validates Routine Editor standard and cross-midnight duration calculations; Routine creation, updating, and deletion with Anchor fallback; Micro-step CRUD, reordering, and auto-balance; Privacy Vault PIN setup, verification, locking, and emergency reset; Scratchpad item addition and Markdown Day Journal / CSV Transaction exports; Daily Summary metric archiving and 7-day rolling trend metrics.
 - ✅ **Subsystem Suites (11 tests):** Deep store and audio unit specifications.
 
 ---

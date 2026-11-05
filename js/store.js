@@ -44,6 +44,101 @@ function deepClone(obj) {
 }
 
 /**
+ * Pure JS SHA-256 fallback engine (RFC 6234 standard)
+ * Ensures zero-dependency cryptographic hashing even in non-HTTPS / local file test contexts
+ */
+export function pureJsSha256(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const maxWord = Math.pow(2, 32);
+  let i, j;
+  let result = '';
+
+  const words = [];
+  const asciiBitLength = ascii.length * 8;
+
+  const hash = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+  ];
+  const k = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+
+  ascii += '\x80';
+  while ((ascii.length % 64) - 56) ascii += '\x00';
+  for (i = 0; i < ascii.length; i++) {
+    j = ascii.charCodeAt(i);
+    words[i >> 2] |= j << ((3 - (i % 4)) * 8);
+  }
+  words[words.length] = (asciiBitLength / maxWord) | 0;
+  words[words.length] = asciiBitLength;
+
+  for (j = 0; j < words.length;) {
+    const w = words.slice(j, (j += 16));
+    const oldHash = hash.slice(0);
+
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15], w2 = w[i - 2];
+      const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+      const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+      const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+      const maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+      const temp1 = (hash[7] + (rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25)) + ch + k[i] + (w[i] = (i < 16) ? w[i] : (w[i - 16] + s0 + w[i - 7] + s1) | 0)) | 0;
+      const temp2 = ((rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22)) + maj) | 0;
+
+      hash[7] = hash[6];
+      hash[6] = hash[5];
+      hash[5] = hash[4];
+      hash[4] = (hash[3] + temp1) | 0;
+      hash[3] = hash[2];
+      hash[2] = hash[1];
+      hash[1] = hash[0];
+      hash[0] = (temp1 + temp2) | 0;
+    }
+
+    for (i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j >= 0; j--) {
+      const b = (hash[i] >>> (j * 8)) & 255;
+      result += ((b < 16 ? '0' : '') + b.toString(16));
+    }
+  }
+  return result;
+}
+
+/**
+ * Standard SHA-256 Hex Digest helper
+ * Uses Web Crypto API when available, seamlessly falling back to pureJsSha256
+ */
+export async function sha256Hex(text) {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch {
+    // Graceful fallback to pureJsSha256
+  }
+  return pureJsSha256(String(text || ''));
+}
+
+/**
  * Initial Seed Data for immediate, rich first-time user experience
  */
 export const DEFAULT_STATE = {
@@ -650,7 +745,28 @@ export const DEFAULT_STATE = {
   ],
 
   // 6. Rolling Automated Snapshots
-  snapshots: []
+  snapshots: [],
+
+  // 7. Privacy Vault & Sensitive Data Masking (v2.1 Pro Max Plus)
+  privacy: {
+    pinHash: null,
+    salt: null,
+    cryptoEngine: 'web-crypto-native',
+    isLocked: false,
+    isMasked: false,
+    autoLockMinutes: 5,
+    lockOnTabHidden: true,
+    failedAttempts: 0,
+    lockedUntilTimestamp: null,
+    hint: null,
+    maskCashBalances: true,
+    maskDebts: true,
+    maskSubscriptions: true,
+    maskPrivateNotes: true
+  },
+
+  // 8. 7-Day Rolling History & Daily Metric Archives (v2.1 Pro Max Plus)
+  dailyArchives: []
 };
 
 /**
@@ -759,9 +875,12 @@ class StateStore {
     if (loadedState.focusSprint) {
       base.focusSprint = { ...base.focusSprint, ...loadedState.focusSprint };
     }
+    if (loadedState.privacy) {
+      base.privacy = { ...base.privacy, ...loadedState.privacy };
+    }
 
     // Arrays: use loaded if valid array, otherwise base
-    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad', 'medications', 'subscriptions', 'snapshots'];
+    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad', 'medications', 'subscriptions', 'snapshots', 'dailyArchives'];
     for (const key of arrayKeys) {
       if (Array.isArray(loadedState[key])) {
         base[key] = loadedState[key];
@@ -1320,6 +1439,656 @@ class StateStore {
       theyOweMe: Number(theyOweMe.toFixed(2)),
       iOweThem: Number(iOweThem.toFixed(2)),
       netReceivable: Number((theyOweMe - iOweThem).toFixed(2))
+    };
+  }
+
+  // =========================================================================
+  // v2.1 PRO MAX PLUS — ROUTINE EDITOR & TEMPORAL SCULPTING
+  // =========================================================================
+
+  /**
+   * Validate and compute duration in minutes for routine start/end bounds
+   * Handles cross-midnight wrapping seamlessly without punitive errors
+   */
+  validateRoutineTimeBounds(startTime, endTime, isCrossMidnight = false) {
+    const parseM = (t) => {
+      if (!t || typeof t !== 'string' || !t.includes(':')) return 0;
+      const [h, m] = t.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
+    const mStart = parseM(startTime);
+    const mEnd = parseM(endTime);
+    let cross = Boolean(isCrossMidnight);
+
+    if (mEnd < mStart) {
+      cross = true;
+    }
+
+    let deltaMinutes = 0;
+    if (cross || mEnd < mStart) {
+      deltaMinutes = (1440 - mStart) + mEnd;
+    } else {
+      deltaMinutes = mEnd - mStart;
+    }
+
+    if (deltaMinutes <= 0) {
+      deltaMinutes = 60; // compassionate fallback default
+    }
+
+    const hours = Math.floor(deltaMinutes / 60);
+    const mins = deltaMinutes % 60;
+    let durationFormatted = '';
+    if (hours > 0 && mins > 0) durationFormatted = `${hours}h ${mins}m`;
+    else if (hours > 0) durationFormatted = `${hours}h`;
+    else durationFormatted = `${mins}m`;
+
+    return {
+      isValid: true,
+      durationMinutes: deltaMinutes,
+      durationFormatted,
+      isCrossMidnight: cross,
+      warnings: deltaMinutes > 720 ? ['Routine block exceeds 12 hours. Consider dividing into sub-blocks.'] : []
+    };
+  }
+
+  /**
+   * Create a new Routine Block
+   */
+  createRoutine(payload = {}) {
+    const start = payload.startTime || payload.start || '09:00';
+    const end = payload.endTime || payload.end || '10:00';
+    const timeInfo = this.validateRoutineTimeBounds(start, end, payload.isCrossMidnight);
+
+    const steps = (Array.isArray(payload.steps) ? payload.steps : []).map((step, idx) => ({
+      id: step.id || generateId('step'),
+      order: idx + 1,
+      title: String(step.title || step.name || `Step ${idx + 1}`).trim(),
+      durationMinutes: Number(step.durationMinutes || 10),
+      isCompleted: Boolean(step.isCompleted),
+      completedAt: step.completedAt || null
+    }));
+
+    const routineId = payload.id || generateId('routine');
+    const title = String(payload.title || payload.name || 'New Routine Block').trim();
+
+    const newRoutine = {
+      id: routineId,
+      title,
+      name: title,
+      start,
+      startTime: start,
+      end,
+      endTime: end,
+      category: payload.category || 'work',
+      icon: payload.icon || '🎯',
+      color: payload.color || '#4a7bb0',
+      isCrossMidnight: timeInfo.isCrossMidnight,
+      durationMinutes: timeInfo.durationMinutes,
+      steps
+    };
+
+    this.createAutoSnapshot('auto_pre_routine_create');
+    this.addItem('routines', newRoutine);
+    return newRoutine;
+  }
+
+  /**
+   * Update an existing Routine Block
+   */
+  updateRoutine(routineId, partial = {}) {
+    const routines = this.state.routines || [];
+    const existing = routines.find((r) => r.id === routineId);
+    if (!existing) {
+      throw new Error(`[DailyCompass:Store] Routine "${routineId}" not found.`);
+    }
+
+    const start = partial.startTime || partial.start || existing.startTime || existing.start;
+    const end = partial.endTime || partial.end || existing.endTime || existing.end;
+    const isCross = partial.isCrossMidnight !== undefined ? partial.isCrossMidnight : existing.isCrossMidnight;
+    const timeInfo = this.validateRoutineTimeBounds(start, end, isCross);
+
+    const updated = {
+      ...existing,
+      ...partial,
+      start,
+      startTime: start,
+      end,
+      endTime: end,
+      isCrossMidnight: timeInfo.isCrossMidnight,
+      durationMinutes: timeInfo.durationMinutes
+    };
+
+    if (partial.title) {
+      updated.title = String(partial.title).trim();
+      updated.name = updated.title;
+    }
+
+    if (Array.isArray(partial.steps)) {
+      updated.steps = partial.steps.map((st, i) => ({
+        id: st.id || generateId('step'),
+        order: i + 1,
+        title: String(st.title || st.name || `Step ${i + 1}`).trim(),
+        durationMinutes: Number(st.durationMinutes || 10),
+        isCompleted: Boolean(st.isCompleted),
+        completedAt: st.completedAt || null
+      }));
+    }
+
+    this.updateItem('routines', routineId, updated);
+    return updated;
+  }
+
+  /**
+   * Delete a Routine Block with pre-deletion snapshot and anchor fallback
+   */
+  deleteRoutine(routineId) {
+    this.createAutoSnapshot('auto_pre_routine_delete');
+    this.deleteItem('routines', routineId);
+
+    // If deleted routine was active in anchor, smoothly transition to next
+    if (this.state.anchor?.currentRoutineId === routineId || this.state.anchor?.activeRoutineId === routineId) {
+      const remaining = this.state.routines || [];
+      const nextRoutine = remaining.length > 0 ? remaining[0] : null;
+      this.updateModule('anchor', (anchor) => ({
+        ...anchor,
+        currentRoutineId: nextRoutine ? nextRoutine.id : null,
+        activeRoutineId: nextRoutine ? nextRoutine.id : null,
+        activeStepId: nextRoutine && nextRoutine.steps?.[0]?.id ? nextRoutine.steps[0].id : null
+      }));
+    }
+    return true;
+  }
+
+  /**
+   * Add a Micro-Step to a Routine Block
+   */
+  addRoutineStep(routineId, stepPayload, insertAtIndex = null) {
+    const routine = (this.state.routines || []).find((r) => r.id === routineId);
+    if (!routine) {
+      throw new Error(`[DailyCompass:Store] Routine "${routineId}" not found.`);
+    }
+
+    const steps = [...(routine.steps || [])];
+    const newStep = {
+      id: stepPayload?.id || generateId('step'),
+      title: String(stepPayload?.title || stepPayload?.name || `Step ${steps.length + 1}`).trim(),
+      durationMinutes: Number(stepPayload?.durationMinutes || 10),
+      isCompleted: Boolean(stepPayload?.isCompleted),
+      completedAt: stepPayload?.completedAt || null
+    };
+
+    if (insertAtIndex !== null && insertAtIndex >= 0 && insertAtIndex <= steps.length) {
+      steps.splice(insertAtIndex, 0, newStep);
+    } else {
+      steps.push(newStep);
+    }
+
+    // Renumber 1..N
+    const renumbered = steps.map((s, idx) => ({ ...s, order: idx + 1 }));
+    this.updateItem('routines', routineId, { steps: renumbered });
+    return renumbered.find((s) => s.id === newStep.id);
+  }
+
+  /**
+   * Update a Micro-Step in a Routine Block
+   */
+  updateRoutineStep(routineId, stepId, partial = {}) {
+    const routine = (this.state.routines || []).find((r) => r.id === routineId);
+    if (!routine) {
+      throw new Error(`[DailyCompass:Store] Routine "${routineId}" not found.`);
+    }
+
+    let found = null;
+    const updatedSteps = (routine.steps || []).map((step) => {
+      if (step.id === stepId) {
+        found = { ...step, ...partial };
+        if (partial.isCompleted && !step.isCompleted) {
+          found.completedAt = new Date().toISOString();
+        } else if (partial.isCompleted === false) {
+          found.completedAt = null;
+        }
+        return found;
+      }
+      return step;
+    });
+
+    if (!found) {
+      throw new Error(`[DailyCompass:Store] Step "${stepId}" not found in routine "${routineId}".`);
+    }
+
+    this.updateItem('routines', routineId, { steps: updatedSteps });
+    return found;
+  }
+
+  /**
+   * Delete a Micro-Step from a Routine Block
+   */
+  deleteRoutineStep(routineId, stepId) {
+    const routine = (this.state.routines || []).find((r) => r.id === routineId);
+    if (!routine) {
+      throw new Error(`[DailyCompass:Store] Routine "${routineId}" not found.`);
+    }
+
+    const filtered = (routine.steps || []).filter((s) => s.id !== stepId);
+    const renumbered = filtered.map((s, idx) => ({ ...s, order: idx + 1 }));
+    this.updateItem('routines', routineId, { steps: renumbered });
+    return true;
+  }
+
+  /**
+   * Reorder Micro-Steps in a Routine Block
+   */
+  reorderRoutineSteps(routineId, orderedStepIds = []) {
+    const routine = (this.state.routines || []).find((r) => r.id === routineId);
+    if (!routine) {
+      throw new Error(`[DailyCompass:Store] Routine "${routineId}" not found.`);
+    }
+
+    const currentMap = new Map((routine.steps || []).map((s) => [s.id, s]));
+    const reordered = [];
+
+    for (const sid of orderedStepIds) {
+      if (currentMap.has(sid)) {
+        reordered.push(currentMap.get(sid));
+        currentMap.delete(sid);
+      }
+    }
+    // Append any steps not specified in orderedStepIds
+    for (const leftover of currentMap.values()) {
+      reordered.push(leftover);
+    }
+
+    const renumbered = reordered.map((s, idx) => ({ ...s, order: idx + 1 }));
+    this.updateItem('routines', routineId, { steps: renumbered });
+    return renumbered;
+  }
+
+  /**
+   * 1-Tap Auto-Balance helper: splits routine duration evenly across steps
+   */
+  autoBalanceRoutineSteps(routineId) {
+    const routine = (this.state.routines || []).find((r) => r.id === routineId);
+    if (!routine || !routine.steps || routine.steps.length === 0) return false;
+
+    const totalMin = routine.durationMinutes || 60;
+    const n = routine.steps.length;
+    const perStep = Math.max(1, Math.floor(totalMin / n));
+    const remainder = totalMin - (perStep * n);
+
+    const balanced = routine.steps.map((st, idx) => ({
+      ...st,
+      durationMinutes: idx === n - 1 ? perStep + remainder : perStep
+    }));
+
+    this.updateItem('routines', routineId, { steps: balanced });
+    return balanced;
+  }
+
+  // =========================================================================
+  // v2.1 PRO MAX PLUS — PRIVACY VAULT & BALANCE MASKING
+  // =========================================================================
+
+  /**
+   * Setup or change Privacy PIN
+   */
+  async setupPrivacyPin(pinString, options = {}) {
+    const cleanPin = String(pinString || '').trim();
+    if (!/^\d{4,8}$/.test(cleanPin)) {
+      throw new Error('[DailyCompass:Store] PIN must be between 4 and 8 digits.');
+    }
+
+    const salt = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+      ? Array.from(crypto.getRandomValues(new Uint8Array(16))).map((b) => b.toString(16).padStart(2, '0')).join('')
+      : `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+
+    const pinHash = await sha256Hex(`${salt}:${cleanPin}`);
+
+    this.updateModule('privacy', (priv) => ({
+      ...priv,
+      pinHash,
+      salt,
+      hint: options.hint ? String(options.hint).trim() : null,
+      failedAttempts: 0,
+      lockedUntilTimestamp: null,
+      isLocked: false
+    }));
+
+    return true;
+  }
+
+  /**
+   * Verify an entered PIN against stored salt and hash
+   */
+  async verifyPrivacyPin(pinString) {
+    const priv = this.state.privacy || {};
+    if (!priv.pinHash || !priv.salt) {
+      return true; // No PIN configured
+    }
+
+    // Check rate-limiting lockout
+    if (priv.lockedUntilTimestamp && Date.now() < priv.lockedUntilTimestamp) {
+      const remainingSec = Math.ceil((priv.lockedUntilTimestamp - Date.now()) / 1000);
+      throw new Error(`[DailyCompass:Store] Vault locked. Cooldown remaining: ${remainingSec}s`);
+    }
+
+    const cleanPin = String(pinString || '').trim();
+    const hashAttempt = await sha256Hex(`${priv.salt}:${cleanPin}`);
+
+    if (hashAttempt === priv.pinHash) {
+      // Success: reset failed attempts and unlock
+      this.updateModule('privacy', (p) => ({
+        ...p,
+        failedAttempts: 0,
+        lockedUntilTimestamp: null,
+        isLocked: false
+      }));
+      return true;
+    } else {
+      // Failed attempt
+      const attempts = (priv.failedAttempts || 0) + 1;
+      let lockoutDurationMs = 0;
+      if (attempts >= 7) lockoutDurationMs = 300000; // 5 mins
+      else if (attempts >= 5) lockoutDurationMs = 60000; // 1 min
+      else if (attempts >= 3) lockoutDurationMs = 15000; // 15 sec
+
+      const lockedUntil = lockoutDurationMs > 0 ? Date.now() + lockoutDurationMs : null;
+
+      this.updateModule('privacy', (p) => ({
+        ...p,
+        failedAttempts: attempts,
+        lockedUntilTimestamp: lockedUntil
+      }));
+      return false;
+    }
+  }
+
+  /**
+   * Remove PIN security from the Vault
+   */
+  async removePrivacyPin(currentPinString) {
+    const verified = await this.verifyPrivacyPin(currentPinString);
+    if (!verified) {
+      return false;
+    }
+
+    this.updateModule('privacy', (priv) => ({
+      ...priv,
+      pinHash: null,
+      salt: null,
+      hint: null,
+      isLocked: false,
+      failedAttempts: 0,
+      lockedUntilTimestamp: null
+    }));
+
+    return true;
+  }
+
+  /**
+   * Toggle or set the balance masking mode (instant visual blur)
+   */
+  toggleMaskMode(forceState = undefined) {
+    let nextState;
+    this.updateModule('privacy', (priv) => {
+      nextState = forceState !== undefined ? Boolean(forceState) : !priv.isMasked;
+      return { ...priv, isMasked: nextState };
+    });
+    return nextState;
+  }
+
+  /**
+   * Instantly lock vault screen
+   */
+  lockVault() {
+    const priv = this.state.privacy || {};
+    if (priv.pinHash) {
+      this.updateModule('privacy', (p) => ({ ...p, isLocked: true, isMasked: true }));
+    } else {
+      // If no PIN is configured, lock just enables masking
+      this.updateModule('privacy', (p) => ({ ...p, isMasked: true }));
+    }
+  }
+
+  /**
+   * Unlock vault with PIN
+   */
+  async unlockVault(pinString) {
+    const valid = await this.verifyPrivacyPin(pinString);
+    if (valid) {
+      this.updateModule('privacy', (p) => ({ ...p, isLocked: false }));
+    }
+    return valid;
+  }
+
+  /**
+   * Emergency reset: compassionate zero data-loss reset for forgotten PINs
+   */
+  emergencyResetPin(confirmationPhrase = '') {
+    if (String(confirmationPhrase).trim().toLowerCase() !== 'reset vault') {
+      return false;
+    }
+
+    this.updateModule('privacy', (priv) => ({
+      ...priv,
+      pinHash: null,
+      salt: null,
+      hint: null,
+      isLocked: false,
+      failedAttempts: 0,
+      lockedUntilTimestamp: null
+    }));
+
+    return true;
+  }
+
+  /**
+   * Get public status of privacy vault without exposing hashes
+   */
+  getPrivacyStatus() {
+    const priv = this.state.privacy || {};
+    const now = Date.now();
+    const isUnderLockout = Boolean(priv.lockedUntilTimestamp && now < priv.lockedUntilTimestamp);
+    const cooldownSeconds = isUnderLockout ? Math.ceil((priv.lockedUntilTimestamp - now) / 1000) : 0;
+
+    return {
+      hasPin: Boolean(priv.pinHash),
+      isLocked: Boolean(priv.isLocked),
+      isMasked: Boolean(priv.isMasked),
+      failedAttempts: priv.failedAttempts || 0,
+      isUnderLockout,
+      cooldownSeconds,
+      hint: priv.hint || null
+    };
+  }
+
+  // =========================================================================
+  // v2.1 PRO MAX PLUS — SCRATCHPAD JOURNAL & EXPORT ENGINE
+  // =========================================================================
+
+  /**
+   * Add a quick thought or reflection note to the scratchpad
+   */
+  addScratchpadItem({ text, tag = 'Thought', category = 'idea' }) {
+    const cleanText = String(text || '').trim();
+    if (!cleanText) return null;
+
+    const item = {
+      id: generateId('note'),
+      text: cleanText,
+      content: cleanText,
+      tag: String(tag).trim() || 'Thought',
+      category: String(category).trim().toLowerCase() || 'idea',
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      convertedTo: null
+    };
+
+    this.updateModule('scratchpad', (notes) => [item, ...(notes || [])]);
+    return item;
+  }
+
+  /**
+   * Delete a scratchpad note
+   */
+  deleteScratchpadItem(id) {
+    this.deleteItem('scratchpad', id);
+    return true;
+  }
+
+  /**
+   * Export today's full day journal as a formatted Markdown document
+   */
+  exportMarkdownDayJournal(dateString = getLocalDateString(0)) {
+    const state = this.getState();
+    const safeToSpend = this.getSafeToSpendToday();
+    const spentToday = this.getExpensesTotal(dateString);
+    const debtSummary = this.getDebtSummary();
+    const buffer = this.getEndMonthCashBuffer();
+
+    const hydrationCurrent = state.hydration?.currentMl || 0;
+    const hydrationTarget = state.hydration?.targetMl || 2000;
+    const hydrationPct = Math.round((hydrationCurrent / hydrationTarget) * 100);
+
+    const meds = state.medications || [];
+    const medsTaken = meds.filter((m) => m.takenToday).length;
+
+    const habits = state.habits || [];
+    const habitsDone = habits.filter((h) => (h.completedDates || []).includes(dateString)).length;
+
+    const routines = state.routines || [];
+    let routineStepsTotal = 0;
+    let routineStepsDone = 0;
+    routines.forEach((r) => {
+      (r.steps || []).forEach((st) => {
+        routineStepsTotal++;
+        if (st.isCompleted) routineStepsDone++;
+      });
+    });
+
+    const notes = state.scratchpad || [];
+
+    const lines = [
+      `# 🧭 Daily Compass — Day Log: ${dateString}`,
+      `*Generated on ${new Date().toLocaleString()}*`,
+      '',
+      '## ⚡ Energy & Grounding State',
+      `- **Energy Battery:** ${state.energyBattery?.level ?? 100}% (${state.energyBattery?.isGentleMode ? 'Gentle Sensory Mode Active' : 'Optimal Capacity'})`,
+      `- **Active Anchor:** ${state.anchor?.activeRoutineId || 'None'}`,
+      '',
+      '## 💧 Hydration & Medications',
+      `- **Hydration:** ${hydrationCurrent}ml / ${hydrationTarget}ml (${hydrationPct}%)`,
+      `- **Medications:** ${medsTaken} of ${meds.length} taken today`,
+      ...meds.map((m) => `  - [${m.takenToday ? 'x' : ' '}] **${m.name}** (${m.dosage}) — *${m.timeSlot}*`),
+      '',
+      '## 📋 Routines & Schedule Blocks',
+      `- **Overall Progress:** ${routineStepsDone} / ${routineStepsTotal} micro-actions completed`,
+      ...routines.map((r) => {
+        const stepCount = (r.steps || []).length;
+        const doneCount = (r.steps || []).filter((s) => s.isCompleted).length;
+        return `### ${r.icon || '🎯'} ${r.title} (${r.start} - ${r.end}) [${doneCount}/${stepCount}]\n` +
+          (r.steps || []).map((s) => `  - [${s.isCompleted ? 'x' : ' '}] ${s.title} (${s.durationMinutes}m)`).join('\n');
+      }),
+      '',
+      '## 🌿 Habits & Activities',
+      `- **Habits Completed:** ${habitsDone} / ${habits.length}`,
+      ...habits.map((h) => {
+        const isDone = (h.completedDates || []).includes(dateString);
+        return `  - [${isDone ? 'x' : ' '}] **${h.title}** (🔥 Streak: ${h.streak || 0} days)`;
+      }),
+      '',
+      '## 💳 Financial Ledger & Safety Buffer',
+      `- **Daily Budget Cap:** $${state.settings?.dailyBudgetCap ?? 50}`,
+      `- **Spent Today:** $${spentToday.toFixed(2)}`,
+      `- **Safe-to-Spend Balance:** $${safeToSpend.toFixed(2)} (${safeToSpend >= 0 ? 'Surplus' : 'Deficit'})`,
+      `- **End-of-Month Projected Buffer:** $${buffer.projectedBuffer.toFixed(2)} (${buffer.status.toUpperCase()})`,
+      `- **Debts:** Lent: $${debtSummary.theyOweMe} | Borrowed: $${debtSummary.iOweThem} | Net: $${debtSummary.netReceivable}`,
+      '',
+      '## 📝 Scratchpad & Brain Dump Entries',
+      ...(notes.length > 0
+        ? notes.map((n) => `- **[${n.tag || 'Note'}]** ${n.text || n.content} *(logged ${new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})*`)
+        : ['*No scratchpad notes recorded today.*']),
+      '',
+      '---',
+      '*Daily Compass — Zero-distraction calm daily companion.*'
+    ];
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Export cash transactions as standard CSV
+   */
+  exportCSVTransactions() {
+    const transactions = this.state.cashTransactions || [];
+    const headers = ['Date', 'Time', 'Type', 'Category', 'Amount', 'Note'];
+    const rows = transactions.map((tx) => [
+      tx.date || '',
+      tx.time || '',
+      tx.type || 'expense',
+      `"${String(tx.category || '').replace(/"/g, '""')}"`,
+      Number(tx.amount || 0).toFixed(2),
+      `"${String(tx.note || '').replace(/"/g, '""')}"`
+    ]);
+
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  /**
+   * Archive today's summary metrics into the 7-day rolling archive
+   */
+  archiveDailySummary(dateString = getLocalDateString(0)) {
+    const state = this.getState();
+    const waterMl = state.hydration?.currentMl || 0;
+    const meds = state.medications || [];
+    const medsCompleted = meds.filter((m) => m.takenToday).length;
+    const habits = state.habits || [];
+    const habitsCompleted = habits.filter((h) => (h.completedDates || []).includes(dateString)).length;
+    const spent = this.getExpensesTotal(dateString);
+    const budgetCap = Number(state.settings?.dailyBudgetCap ?? 50);
+
+    const record = {
+      date: dateString,
+      waterMl,
+      medsCompleted,
+      medsTotal: meds.length,
+      habitsCompleted,
+      habitsTotal: habits.length,
+      spent: Number(spent.toFixed(2)),
+      budgetCap,
+      archivedAt: new Date().toISOString()
+    };
+
+    this.updateModule('dailyArchives', (archives) => {
+      const list = (archives || []).filter((a) => a.date !== dateString);
+      list.push(record);
+      // Keep last 14 days sorted chronologically
+      return list.sort((a, b) => a.date.localeCompare(b.date)).slice(-14);
+    });
+
+    return record;
+  }
+
+  /**
+   * Compute 7-day rolling trend metrics
+   */
+  getWeeklyTrendMetrics() {
+    const archives = this.state.dailyArchives || [];
+    const last7 = archives.slice(-7);
+
+    const totalDays = last7.length || 1;
+    const avgWater = Math.round(last7.reduce((sum, d) => sum + (d.waterMl || 0), 0) / totalDays);
+    const avgSpend = Number((last7.reduce((sum, d) => sum + (d.spent || 0), 0) / totalDays).toFixed(2));
+    const totalHabitsDone = last7.reduce((sum, d) => sum + (d.habitsCompleted || 0), 0);
+    const totalHabitsPossible = last7.reduce((sum, d) => sum + (d.habitsTotal || 0), 0);
+    const habitAdherence = totalHabitsPossible > 0 ? Math.round((totalHabitsDone / totalHabitsPossible) * 100) : 100;
+
+    return {
+      daysLogged: last7.length,
+      avgWaterMl: avgWater,
+      avgDailySpend: avgSpend,
+      habitAdherenceRate: habitAdherence,
+      dailyRecords: last7
     };
   }
 }

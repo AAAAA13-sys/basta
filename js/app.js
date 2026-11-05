@@ -294,7 +294,53 @@ const dom = {
   subName: document.getElementById('sub-name'),
   subAmount: document.getElementById('sub-amount'),
   subBillingDay: document.getElementById('sub-billing-day'),
-  subCategory: document.getElementById('sub-category')
+  subCategory: document.getElementById('sub-category'),
+
+  // Routine Block Editor (v2.1 Pro Max Plus)
+  btnOpenAddRoutine: document.getElementById('btn-open-add-routine'),
+  modalRoutineEditor: document.getElementById('modal-routine-editor'),
+  btnCloseRoutineEditor: document.getElementById('btn-close-routine-editor'),
+  btnCancelRoutineEditor: document.getElementById('btn-cancel-routine-editor'),
+  formRoutineEditor: document.getElementById('form-routine-editor'),
+  routineEditorTitle: document.getElementById('routine-editor-title'),
+  routineEditId: document.getElementById('routine-edit-id'),
+  routineEditTitle: document.getElementById('routine-edit-title'),
+  routineEditStart: document.getElementById('routine-edit-start'),
+  routineEditEnd: document.getElementById('routine-edit-end'),
+  routineEditDurationChip: document.getElementById('routine-edit-duration-chip'),
+  routineCategoryPills: document.getElementById('routine-category-pills'),
+  routineEditStepsContainer: document.getElementById('routine-edit-steps-container'),
+  btnRoutineAddStep: document.getElementById('btn-routine-add-step'),
+  btnRoutineAutoBalance: document.getElementById('btn-routine-auto-balance'),
+  btnDeleteRoutine: document.getElementById('btn-delete-routine'),
+
+  // Privacy Vault & Balance Masking (v2.1 Pro Max Plus)
+  btnPeekPrivacy: document.getElementById('btn-peek-privacy'),
+  privacySlashLine: document.getElementById('privacy-slash-line'),
+  privacyToggleLabel: document.getElementById('privacy-toggle-label'),
+  btnVaultLock: document.getElementById('btn-vault-lock'),
+  modalPrivacyPin: document.getElementById('modal-privacy-pin'),
+  btnClosePrivacyPin: document.getElementById('btn-close-privacy-pin'),
+  vaultModalTitle: document.getElementById('vault-modal-title'),
+  vaultModalSubtitle: document.getElementById('vault-modal-subtitle'),
+  vaultNoticeBanner: document.getElementById('vault-notice-banner'),
+  pinKeypadButtons: document.getElementById('pin-keypad-buttons'),
+  pinDotsRow: document.getElementById('pin-dots-row'),
+  dot1: document.getElementById('dot-1'),
+  dot2: document.getElementById('dot-2'),
+  dot3: document.getElementById('dot-3'),
+  dot4: document.getElementById('dot-4'),
+  linkEmergencyVaultReset: document.getElementById('link-emergency-vault-reset'),
+
+  // Journal & CSV Export (v2.1 Pro Max Plus)
+  btnOpenJournalExport: document.getElementById('btn-open-journal-export'),
+  btnExportCsvDirect: document.getElementById('btn-export-csv-direct'),
+  modalJournalExport: document.getElementById('modal-journal-export'),
+  btnCloseJournalExport: document.getElementById('btn-close-journal-export'),
+  journalPreviewText: document.getElementById('journal-preview-text'),
+  btnCopyJournalClipboard: document.getElementById('btn-copy-journal-clipboard'),
+  btnDownloadJournalMd: document.getElementById('btn-download-journal-md'),
+  btnDownloadLedgerCsv: document.getElementById('btn-download-ledger-csv')
 };
 
 // ==========================================================================
@@ -728,6 +774,47 @@ function renderOmnibarResults(query = '') {
     });
   }
 
+  // v2.1 Pro Max Plus Omnibar Actions
+  if (q.startsWith('+routine') || q === 'routine') {
+    results.push({
+      title: 'Add Routine Block',
+      badge: 'Schedule',
+      action: () => openRoutineEditor(null)
+    });
+  }
+
+  if (q.startsWith('+mask') || q.startsWith('+priv') || q === 'privacy') {
+    results.push({
+      title: 'Toggle Privacy Balance Masking',
+      badge: 'Privacy',
+      action: togglePeekPrivacy
+    });
+  }
+
+  if (q.startsWith('+lock') || q === 'lock') {
+    results.push({
+      title: 'Lock Privacy Vault',
+      badge: 'Security',
+      action: () => {
+        const stat = store.getPrivacyStatus();
+        if (stat.hasPin) {
+          store.lockVault();
+          openPrivacyPinModal('unlock');
+        } else {
+          openPrivacyPinModal('setup');
+        }
+      }
+    });
+  }
+
+  if (q.startsWith('+journal') || q.startsWith('+export') || q === 'export') {
+    results.push({
+      title: 'Export Daily Journal & Markdown Summary',
+      badge: 'Export',
+      action: openJournalExportModal
+    });
+  }
+
   // Cross-Module Search: Habits, Debts, Scratchpad, Routines
   (state.habits || []).forEach((h) => {
     if (!q || h.title.toLowerCase().includes(q)) {
@@ -934,16 +1021,19 @@ function renderAnchorAndToday(state) {
   if (dom.todayRoutineStream) {
     const routines = state.routines || [];
     dom.todayRoutineStream.innerHTML = routines.map((r) => {
-      const stepsHtml = (r.steps || []).map((s) => `<li>${s.title}</li>`).join('');
+      const stepsHtml = (r.steps || []).map((s) => `<li>${s.title} <span style="color: var(--text-muted); font-size: 11px;">(${s.durationMinutes || 10}m)</span></li>`).join('');
       return `
         <div class="timeline-item" data-id="${r.id}">
-          <div class="timeline-dot">${r.icon || '⏰'}</div>
+          <div class="timeline-dot" style="background-color: ${r.color || '#4a7bb0'}20; border-color: ${r.color || '#4a7bb0'};">${r.icon || '⏰'}</div>
           <div class="timeline-card">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <strong style="color: var(--text-primary); font-size: 15px;">${r.title}</strong>
-              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-sky);">
-                ${formatTimeString(r.start, state.profile?.timeFormat)} &ndash; ${formatTimeString(r.end, state.profile?.timeFormat)}
-              </span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-sky);">
+                  ${formatTimeString(r.start, state.profile?.timeFormat)} &ndash; ${formatTimeString(r.end, state.profile?.timeFormat)}
+                </span>
+                <button class="btn-icon-action btn-edit-routine" data-id="${r.id}" title="Edit Routine Block" style="width: 26px; height: 26px; font-size: 11px; padding: 2px;">✏️</button>
+              </div>
             </div>
             ${stepsHtml ? `<ul style="margin-top: 6px; padding-left: 18px; font-size: 13px; color: var(--text-secondary);">${stepsHtml}</ul>` : ''}
           </div>
@@ -1341,6 +1431,297 @@ function renderSettingsAndSnapshots(state) {
       }).join('');
     }
   }
+}
+
+// ==========================================================================
+// v2.1 PRO MAX PLUS CONTROLLERS (Routine Editor, Privacy Vault, Journal Export)
+// ==========================================================================
+let currentEditingRoutine = null;
+
+function openRoutineEditor(routineId = null) {
+  const state = store.getState();
+  const routines = state.routines || [];
+
+  if (routineId) {
+    currentEditingRoutine = routines.find((r) => r.id === routineId) || null;
+  } else {
+    currentEditingRoutine = null;
+  }
+
+  if (currentEditingRoutine) {
+    dom.routineEditorTitle.textContent = 'Edit Routine Block';
+    dom.routineEditId.value = currentEditingRoutine.id;
+    dom.routineEditTitle.value = currentEditingRoutine.title || currentEditingRoutine.name || '';
+    dom.routineEditStart.value = currentEditingRoutine.startTime || currentEditingRoutine.start || '09:00';
+    dom.routineEditEnd.value = currentEditingRoutine.endTime || currentEditingRoutine.end || '10:00';
+    if (dom.btnDeleteRoutine) dom.btnDeleteRoutine.style.display = 'block';
+
+    highlightCategoryPill(currentEditingRoutine.category || 'work');
+    renderStepBuilderRows(currentEditingRoutine.steps || []);
+  } else {
+    dom.routineEditorTitle.textContent = 'Add Routine Block';
+    dom.routineEditId.value = '';
+    dom.routineEditTitle.value = '';
+    dom.routineEditStart.value = '14:00';
+    dom.routineEditEnd.value = '15:30';
+    if (dom.btnDeleteRoutine) dom.btnDeleteRoutine.style.display = 'none';
+
+    highlightCategoryPill('work');
+    renderStepBuilderRows([
+      { title: 'Setup & Focus Alignment', durationMinutes: 15 },
+      { title: 'Core Activity Session', durationMinutes: 60 },
+      { title: 'Decompression & Wrap-Up', durationMinutes: 15 }
+    ]);
+  }
+
+  updateLiveDurationChip();
+  dom.modalRoutineEditor.classList.add('open');
+  if (dom.routineEditTitle) dom.routineEditTitle.focus();
+}
+
+function closeRoutineEditor() {
+  dom.modalRoutineEditor.classList.remove('open');
+  currentEditingRoutine = null;
+}
+
+function highlightCategoryPill(cat) {
+  if (!dom.routineCategoryPills) return;
+  const pills = dom.routineCategoryPills.querySelectorAll('.category-pill');
+  pills.forEach((p) => {
+    p.classList.toggle('selected', p.dataset.cat === cat);
+  });
+}
+
+function getSelectedCategory() {
+  if (!dom.routineCategoryPills) return { cat: 'work', color: '#4a7bb0', icon: '🎯' };
+  const sel = dom.routineCategoryPills.querySelector('.category-pill.selected');
+  if (sel) {
+    return {
+      cat: sel.dataset.cat || 'work',
+      color: sel.dataset.color || '#4a7bb0',
+      icon: sel.dataset.icon || '🎯'
+    };
+  }
+  return { cat: 'work', color: '#4a7bb0', icon: '🎯' };
+}
+
+function updateLiveDurationChip() {
+  const start = dom.routineEditStart ? dom.routineEditStart.value : '09:00';
+  const end = dom.routineEditEnd ? dom.routineEditEnd.value : '10:00';
+  const bounds = store.validateRoutineTimeBounds(start, end);
+  if (dom.routineEditDurationChip) {
+    dom.routineEditDurationChip.textContent = `⏱ ${bounds.durationFormatted}`;
+    if (bounds.isCrossMidnight) {
+      dom.routineEditDurationChip.title = 'Overnight Routine (Cross-Midnight)';
+      dom.routineEditDurationChip.style.borderColor = 'var(--accent-amber)';
+    } else {
+      dom.routineEditDurationChip.title = 'Standard Routine Duration';
+      dom.routineEditDurationChip.style.borderColor = 'var(--accent-amber-border)';
+    }
+  }
+}
+
+function renderStepBuilderRows(steps = []) {
+  if (!dom.routineEditStepsContainer) return;
+  dom.routineEditStepsContainer.innerHTML = steps.map((s, idx) => `
+    <div class="step-builder-row" data-idx="${idx}">
+      <span class="step-drag-handle">⋮⋮</span>
+      <input type="text" class="step-input-title" placeholder="Step ${idx + 1} action..." value="${s.title || ''}" required>
+      <input type="number" class="step-input-duration" min="1" max="360" value="${s.durationMinutes || 10}" title="Duration in minutes">
+      <span style="font-size: 11px; color: var(--text-muted);">m</span>
+      <button type="button" class="step-delete-btn" title="Remove step">&times;</button>
+    </div>
+  `).join('');
+}
+
+function collectStepBuilderRows() {
+  if (!dom.routineEditStepsContainer) return [];
+  const rows = dom.routineEditStepsContainer.querySelectorAll('.step-builder-row');
+  const collected = [];
+  rows.forEach((row, idx) => {
+    const titleInput = row.querySelector('.step-input-title');
+    const durInput = row.querySelector('.step-input-duration');
+    const title = titleInput ? titleInput.value.trim() : '';
+    const durationMinutes = durInput ? parseInt(durInput.value, 10) || 10 : 10;
+    if (title) {
+      collected.push({
+        order: idx + 1,
+        title,
+        durationMinutes
+      });
+    }
+  });
+  return collected;
+}
+
+// --- Privacy Vault Logic ---
+let enteredPinDigits = [];
+let vaultMode = 'unlock'; // 'unlock' | 'setup'
+
+function initPrivacyState() {
+  const priv = store.getState().privacy || {};
+  const isMasked = Boolean(priv.isMasked);
+  document.documentElement.setAttribute('data-privacy-masked', isMasked ? 'true' : 'false');
+  if (dom.btnPeekPrivacy) {
+    dom.btnPeekPrivacy.classList.toggle('active', isMasked);
+  }
+  if (dom.privacySlashLine) {
+    dom.privacySlashLine.style.display = isMasked ? 'block' : 'none';
+  }
+  if (dom.privacyToggleLabel) {
+    dom.privacyToggleLabel.textContent = isMasked ? 'Masked' : 'Privacy';
+  }
+}
+
+function togglePeekPrivacy() {
+  const next = store.toggleMaskMode();
+  document.documentElement.setAttribute('data-privacy-masked', next ? 'true' : 'false');
+  if (dom.btnPeekPrivacy) {
+    dom.btnPeekPrivacy.classList.toggle('active', next);
+  }
+  if (dom.privacySlashLine) {
+    dom.privacySlashLine.style.display = next ? 'block' : 'none';
+  }
+  if (dom.privacyToggleLabel) {
+    dom.privacyToggleLabel.textContent = next ? 'Masked' : 'Privacy';
+  }
+  soundEngine.playPreset('micro-tick');
+}
+
+function openPrivacyPinModal(mode = 'unlock') {
+  vaultMode = mode;
+  enteredPinDigits = [];
+  updatePinDots();
+  if (dom.vaultNoticeBanner) dom.vaultNoticeBanner.style.display = 'none';
+
+  const status = store.getPrivacyStatus();
+  if (status.isUnderLockout) {
+    if (dom.vaultNoticeBanner) {
+      dom.vaultNoticeBanner.textContent = `Vault locked. Cooldown remaining: ${status.cooldownSeconds}s`;
+      dom.vaultNoticeBanner.style.display = 'block';
+    }
+  } else if (status.hint && vaultMode === 'unlock') {
+    if (dom.vaultNoticeBanner) {
+      dom.vaultNoticeBanner.textContent = `Hint: ${status.hint}`;
+      dom.vaultNoticeBanner.style.display = 'block';
+    }
+  }
+
+  if (vaultMode === 'setup') {
+    dom.vaultModalTitle.textContent = '🔒 Set Privacy PIN';
+    dom.vaultModalSubtitle.textContent = 'Choose a 4-digit PIN to secure balances and sensitive notes';
+  } else {
+    dom.vaultModalTitle.textContent = '🔐 Privacy Vault';
+    dom.vaultModalSubtitle.textContent = 'Enter your 4-digit PIN to unlock private data';
+  }
+
+  dom.modalPrivacyPin.classList.add('open');
+}
+
+function closePrivacyPinModal() {
+  dom.modalPrivacyPin.classList.remove('open');
+  enteredPinDigits = [];
+  updatePinDots();
+}
+
+function updatePinDots() {
+  const dots = [dom.dot1, dom.dot2, dom.dot3, dom.dot4];
+  dots.forEach((dot, idx) => {
+    if (!dot) return;
+    dot.className = 'pin-dot ' + (idx < enteredPinDigits.length ? 'filled' : '');
+  });
+}
+
+async function handlePinInput(val) {
+  if (val === 'clear') {
+    enteredPinDigits = [];
+    updatePinDots();
+    soundEngine.playPreset('micro-tick');
+    return;
+  }
+  if (val === 'back') {
+    enteredPinDigits.pop();
+    updatePinDots();
+    soundEngine.playPreset('micro-tick');
+    return;
+  }
+
+  if (enteredPinDigits.length < 4) {
+    enteredPinDigits.push(val);
+    updatePinDots();
+    soundEngine.playPreset('micro-tick');
+  }
+
+  if (enteredPinDigits.length === 4) {
+    const pin = enteredPinDigits.join('');
+    if (vaultMode === 'setup') {
+      const hint = prompt('Optional PIN Hint (leave blank for none):', '');
+      await store.setupPrivacyPin(pin, { hint });
+      soundEngine.playPreset('zen-bowl');
+      closePrivacyPinModal();
+      alert('Privacy PIN configured successfully!');
+    } else {
+      try {
+        const ok = await store.unlockVault(pin);
+        if (ok) {
+          soundEngine.playPreset('zen-bowl');
+          closePrivacyPinModal();
+          store.toggleMaskMode(false);
+          initPrivacyState();
+        } else {
+          soundEngine.playPreset('attentive-bell');
+          shakePinDots();
+          const stat = store.getPrivacyStatus();
+          if (stat.isUnderLockout && dom.vaultNoticeBanner) {
+            dom.vaultNoticeBanner.textContent = `Too many failed attempts. Cooldown: ${stat.cooldownSeconds}s`;
+            dom.vaultNoticeBanner.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        soundEngine.playPreset('attentive-bell');
+        shakePinDots();
+        if (dom.vaultNoticeBanner) {
+          dom.vaultNoticeBanner.textContent = err.message;
+          dom.vaultNoticeBanner.style.display = 'block';
+        }
+      }
+    }
+  }
+}
+
+function shakePinDots() {
+  if (!dom.pinDotsRow) return;
+  dom.pinDotsRow.classList.add('shake-gentle');
+  setTimeout(() => {
+    dom.pinDotsRow.classList.remove('shake-gentle');
+    enteredPinDigits = [];
+    updatePinDots();
+  }, 400);
+}
+
+// --- Journal & CSV Export Logic ---
+function openJournalExportModal() {
+  const md = store.exportMarkdownDayJournal();
+  if (dom.journalPreviewText) {
+    dom.journalPreviewText.value = md;
+  }
+  dom.modalJournalExport.classList.add('open');
+}
+
+function closeJournalExportModal() {
+  dom.modalJournalExport.classList.remove('open');
+}
+
+function downloadFile(filename, content, type = 'text/markdown;charset=utf-8;') {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ==========================================================================
@@ -2080,8 +2461,201 @@ function setupEventListeners() {
     });
   }
 
+  // ==========================================================================
+  // v2.1 PRO MAX PLUS EVENT LISTENERS
+  // ==========================================================================
+
+  // Routine Block Editor
+  if (dom.btnOpenAddRoutine) dom.btnOpenAddRoutine.addEventListener('click', () => openRoutineEditor(null));
+  if (dom.btnCloseRoutineEditor) dom.btnCloseRoutineEditor.addEventListener('click', closeRoutineEditor);
+  if (dom.btnCancelRoutineEditor) dom.btnCancelRoutineEditor.addEventListener('click', closeRoutineEditor);
+  if (dom.routineEditStart) dom.routineEditStart.addEventListener('input', updateLiveDurationChip);
+  if (dom.routineEditEnd) dom.routineEditEnd.addEventListener('input', updateLiveDurationChip);
+
+  if (dom.routineCategoryPills) {
+    dom.routineCategoryPills.addEventListener('click', (e) => {
+      const pill = e.target.closest('.category-pill');
+      if (!pill) return;
+      highlightCategoryPill(pill.dataset.cat);
+    });
+  }
+
+  if (dom.btnRoutineAddStep) {
+    dom.btnRoutineAddStep.addEventListener('click', () => {
+      const rows = collectStepBuilderRows();
+      rows.push({ title: '', durationMinutes: 15 });
+      renderStepBuilderRows(rows);
+    });
+  }
+
+  if (dom.btnRoutineAutoBalance) {
+    dom.btnRoutineAutoBalance.addEventListener('click', () => {
+      const rows = collectStepBuilderRows();
+      if (rows.length === 0) return;
+      const bounds = store.validateRoutineTimeBounds(dom.routineEditStart.value, dom.routineEditEnd.value);
+      const per = Math.max(1, Math.floor(bounds.durationMinutes / rows.length));
+      const rem = bounds.durationMinutes - (per * rows.length);
+      rows.forEach((r, idx) => {
+        r.durationMinutes = idx === rows.length - 1 ? per + rem : per;
+      });
+      renderStepBuilderRows(rows);
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+
+  if (dom.routineEditStepsContainer) {
+    dom.routineEditStepsContainer.addEventListener('click', (e) => {
+      const del = e.target.closest('.step-delete-btn');
+      if (!del) return;
+      const row = del.closest('.step-builder-row');
+      if (row) row.remove();
+    });
+  }
+
+  if (dom.todayRoutineStream) {
+    dom.todayRoutineStream.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-edit-routine');
+      if (!editBtn) return;
+      const id = editBtn.dataset.id;
+      openRoutineEditor(id);
+    });
+  }
+
+  if (dom.formRoutineEditor) {
+    dom.formRoutineEditor.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = dom.routineEditTitle.value.trim();
+      const start = dom.routineEditStart.value;
+      const end = dom.routineEditEnd.value;
+      const catInfo = getSelectedCategory();
+      const steps = collectStepBuilderRows();
+      const editId = dom.routineEditId.value;
+
+      if (editId) {
+        store.updateRoutine(editId, {
+          title,
+          startTime: start,
+          endTime: end,
+          category: catInfo.cat,
+          color: catInfo.color,
+          icon: catInfo.icon,
+          steps
+        });
+      } else {
+        store.createRoutine({
+          title,
+          startTime: start,
+          endTime: end,
+          category: catInfo.cat,
+          color: catInfo.color,
+          icon: catInfo.icon,
+          steps
+        });
+      }
+
+      soundEngine.playPreset('zen-bowl');
+      closeRoutineEditor();
+    });
+  }
+
+  if (dom.btnDeleteRoutine) {
+    dom.btnDeleteRoutine.addEventListener('click', () => {
+      const editId = dom.routineEditId.value;
+      if (!editId) return;
+      if (confirm('Delete this routine block?')) {
+        store.deleteRoutine(editId);
+        soundEngine.playPreset('micro-tick');
+        closeRoutineEditor();
+      }
+    });
+  }
+
+  // Privacy Vault & Balance Masking
+  if (dom.btnPeekPrivacy) dom.btnPeekPrivacy.addEventListener('click', togglePeekPrivacy);
+  if (dom.btnVaultLock) {
+    dom.btnVaultLock.addEventListener('click', () => {
+      const stat = store.getPrivacyStatus();
+      if (stat.hasPin) {
+        store.lockVault();
+        openPrivacyPinModal('unlock');
+      } else {
+        openPrivacyPinModal('setup');
+      }
+    });
+  }
+  if (dom.btnClosePrivacyPin) dom.btnClosePrivacyPin.addEventListener('click', closePrivacyPinModal);
+  if (dom.pinKeypadButtons) {
+    dom.pinKeypadButtons.addEventListener('click', (e) => {
+      const btn = e.target.closest('.pin-btn');
+      if (!btn) return;
+      handlePinInput(btn.dataset.val);
+    });
+  }
+  if (dom.linkEmergencyVaultReset) {
+    dom.linkEmergencyVaultReset.addEventListener('click', (e) => {
+      e.preventDefault();
+      const phrase = prompt('To reset your vault without losing any tracker data, type "reset vault":');
+      if (phrase && store.emergencyResetPin(phrase)) {
+        alert('Vault successfully reset! All data preserved.');
+        closePrivacyPinModal();
+        initPrivacyState();
+      } else if (phrase) {
+        alert('Phrase did not match "reset vault".');
+      }
+    });
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && store.getPrivacyStatus().hasPin) {
+      store.lockVault();
+      initPrivacyState();
+    }
+  });
+
+  // Journal & CSV Export
+  if (dom.btnOpenJournalExport) dom.btnOpenJournalExport.addEventListener('click', openJournalExportModal);
+  if (dom.btnCloseJournalExport) dom.btnCloseJournalExport.addEventListener('click', closeJournalExportModal);
+  if (dom.btnCopyJournalClipboard) {
+    dom.btnCopyJournalClipboard.addEventListener('click', () => {
+      if (dom.journalPreviewText) {
+        navigator.clipboard.writeText(dom.journalPreviewText.value).then(() => {
+          alert('Journal markdown copied to clipboard!');
+          soundEngine.playPreset('micro-tick');
+        });
+      }
+    });
+  }
+  if (dom.btnDownloadJournalMd) {
+    dom.btnDownloadJournalMd.addEventListener('click', () => {
+      const content = store.exportMarkdownDayJournal();
+      downloadFile(`Daily-Compass-Journal-${getTodayDateString()}.md`, content, 'text/markdown;charset=utf-8;');
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.btnDownloadLedgerCsv) {
+    dom.btnDownloadLedgerCsv.addEventListener('click', () => {
+      const content = store.exportCSVTransactions();
+      downloadFile(`Daily-Compass-Ledger-${getTodayDateString()}.csv`, content, 'text/csv;charset=utf-8;');
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.btnExportCsvDirect) {
+    dom.btnExportCsvDirect.addEventListener('click', () => {
+      const content = store.exportCSVTransactions();
+      downloadFile(`Daily-Compass-Ledger-${getTodayDateString()}.csv`, content, 'text/csv;charset=utf-8;');
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
+    // Quick Peek Privacy Toggle: Alt+P or Alt+M
+    if ((e.altKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 'm' || e.key === 'M')) {
+      e.preventDefault();
+      togglePeekPrivacy();
+      return;
+    }
+
     // Omnibar Toggle: Cmd+K or Ctrl+K
     if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
       e.preventDefault();
@@ -2157,12 +2731,13 @@ function init() {
   });
 
   renderAll();
+  initPrivacyState();
   initClockAndRoutines();
   setupEventListeners();
   initServiceWorker();
   initDailyBaselineSnapshot();
 
-  console.log('Daily Compass v2.0 Pro Max Operating System initialized.');
+  console.log('Daily Compass v2.1 Pro Max Plus Operating System initialized.');
 }
 
 if (document.readyState === 'loading') {

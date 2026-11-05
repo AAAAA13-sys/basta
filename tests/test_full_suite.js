@@ -939,3 +939,182 @@ describe('Suite 7: v2.0 Pro Max Expansion Subsystems', () => {
     assert.strictEqual(soundEngine.getActiveSoundscape(), null);
   });
 });
+
+// ============================================================================
+// TEST SUITE 8: v2.1 PRO MAX PLUS CAPABILITIES
+// ============================================================================
+
+describe('Suite 8: v2.1 Pro Max Plus Subsystems', () => {
+  test('Routine Editor: validateRoutineTimeBounds computes standard & cross-midnight durations', () => {
+    // Normal same-day block: 09:00 to 10:30 (90 mins -> 1h 30m)
+    const res1 = store.validateRoutineTimeBounds('09:00', '10:30');
+    assert.strictEqual(res1.isValid, true);
+    assert.strictEqual(res1.durationMinutes, 90);
+    assert.strictEqual(res1.durationFormatted, '1h 30m');
+    assert.strictEqual(res1.isCrossMidnight, false);
+
+    // Cross-midnight block: 23:15 to 01:45 (150 mins -> 2h 30m)
+    const res2 = store.validateRoutineTimeBounds('23:15', '01:45');
+    assert.strictEqual(res2.isValid, true);
+    assert.strictEqual(res2.durationMinutes, 150);
+    assert.strictEqual(res2.durationFormatted, '2h 30m');
+    assert.strictEqual(res2.isCrossMidnight, true);
+  });
+
+  test('Routine Editor: createRoutine, updateRoutine, and deleteRoutine with anchor fallback', () => {
+    const routine = store.createRoutine({
+      title: 'Afternoon Recharge',
+      startTime: '14:00',
+      endTime: '15:00',
+      category: 'rest',
+      icon: '☕',
+      steps: [
+        { title: 'Step A', durationMinutes: 15 },
+        { title: 'Step B', durationMinutes: 45 }
+      ]
+    });
+
+    assert.ok(routine.id);
+    assert.strictEqual(routine.title, 'Afternoon Recharge');
+    assert.strictEqual(routine.durationMinutes, 60);
+    assert.strictEqual(routine.steps.length, 2);
+    assert.strictEqual(routine.steps[0].order, 1);
+    assert.strictEqual(routine.steps[1].order, 2);
+
+    // Update routine
+    const updated = store.updateRoutine(routine.id, {
+      title: 'Afternoon Deep Rest',
+      endTime: '15:30'
+    });
+    assert.strictEqual(updated.title, 'Afternoon Deep Rest');
+    assert.strictEqual(updated.durationMinutes, 90);
+
+    // Set anchor to this routine and delete it
+    store.updateModule('anchor', (a) => ({ ...a, currentRoutineId: routine.id, activeRoutineId: routine.id }));
+    const deleted = store.deleteRoutine(routine.id);
+    assert.strictEqual(deleted, true);
+
+    // Anchor should have fallen back safely without crashing
+    const anchor = store.getState().anchor;
+    assert.notStrictEqual(anchor.currentRoutineId, routine.id);
+  });
+
+  test('Routine Editor: Micro-steps CRUD and auto-balance', () => {
+    const r = store.createRoutine({
+      title: 'Mini Workflow',
+      startTime: '10:00',
+      endTime: '11:00',
+      steps: []
+    });
+
+    // Add step 1
+    const st1 = store.addRoutineStep(r.id, { title: 'Prep Tools', durationMinutes: 10 });
+    assert.strictEqual(st1.order, 1);
+    assert.strictEqual(st1.title, 'Prep Tools');
+
+    // Add step 2
+    const st2 = store.addRoutineStep(r.id, { title: 'Execution', durationMinutes: 40 });
+    assert.strictEqual(st2.order, 2);
+
+    // Update step 1 (mark complete)
+    const st1Updated = store.updateRoutineStep(r.id, st1.id, { isCompleted: true });
+    assert.strictEqual(st1Updated.isCompleted, true);
+    assert.ok(st1Updated.completedAt);
+
+    // Auto-balance: 60 minutes across 2 steps -> 30 mins each
+    const balanced = store.autoBalanceRoutineSteps(r.id);
+    assert.strictEqual(balanced[0].durationMinutes, 30);
+    assert.strictEqual(balanced[1].durationMinutes, 30);
+
+    // Reorder steps
+    const reordered = store.reorderRoutineSteps(r.id, [st2.id, st1.id]);
+    assert.strictEqual(reordered[0].id, st2.id);
+    assert.strictEqual(reordered[0].order, 1);
+    assert.strictEqual(reordered[1].id, st1.id);
+    assert.strictEqual(reordered[1].order, 2);
+
+    // Delete step
+    const deleted = store.deleteRoutineStep(r.id, st1.id);
+    assert.strictEqual(deleted, true);
+    const routineAfter = store.getState().routines.find((item) => item.id === r.id);
+    assert.strictEqual(routineAfter.steps.length, 1);
+
+    // Cleanup
+    store.deleteRoutine(r.id);
+  });
+
+  test('Privacy Vault: setupPrivacyPin, verifyPrivacyPin, lock, and emergency reset', async () => {
+    // Setup PIN '5555'
+    await store.setupPrivacyPin('5555', { hint: 'My four fives' });
+    const status = store.getPrivacyStatus();
+    assert.strictEqual(status.hasPin, true);
+    assert.strictEqual(status.hint, 'My four fives');
+
+    // Correct PIN verification
+    const correct = await store.verifyPrivacyPin('5555');
+    assert.strictEqual(correct, true);
+
+    // Incorrect PIN verification
+    const wrong = await store.verifyPrivacyPin('9999');
+    assert.strictEqual(wrong, false);
+    assert.strictEqual(store.getPrivacyStatus().failedAttempts, 1);
+
+    // Mask mode toggle
+    const masked = store.toggleMaskMode();
+    assert.strictEqual(typeof masked, 'boolean');
+
+    // Lock Vault
+    store.lockVault();
+    assert.strictEqual(store.getPrivacyStatus().isLocked, true);
+
+    // Unlock Vault with PIN
+    const unlocked = await store.unlockVault('5555');
+    assert.strictEqual(unlocked, true);
+    assert.strictEqual(store.getPrivacyStatus().isLocked, false);
+
+    // Emergency Reset with wrong phrase fails
+    const failReset = store.emergencyResetPin('forgot my pin');
+    assert.strictEqual(failReset, false);
+    assert.strictEqual(store.getPrivacyStatus().hasPin, true);
+
+    // Emergency Reset with exact phrase succeeds without wiping data
+    const successReset = store.emergencyResetPin('reset vault');
+    assert.strictEqual(successReset, true);
+    assert.strictEqual(store.getPrivacyStatus().hasPin, false);
+  });
+
+  test('Scratchpad & Exports: addScratchpadItem, exportMarkdownDayJournal, and exportCSVTransactions', () => {
+    const note = store.addScratchpadItem({ text: 'Remember to backup database', tag: 'Dev', category: 'work' });
+    assert.ok(note.id);
+    assert.strictEqual(note.text, 'Remember to backup database');
+
+    // Markdown Journal Export
+    const md = store.exportMarkdownDayJournal();
+    assert.ok(typeof md === 'string');
+    assert.ok(md.includes('# 🧭 Daily Compass — Day Log'));
+    assert.ok(md.includes('Remember to backup database'));
+    assert.ok(md.includes('Financial Ledger & Safety Buffer'));
+
+    // CSV Transactions Export
+    const csv = store.exportCSVTransactions();
+    assert.ok(typeof csv === 'string');
+    assert.ok(csv.startsWith('Date,Time,Type,Category,Amount,Note'));
+
+    // Cleanup note
+    store.deleteScratchpadItem(note.id);
+  });
+
+  test('Weekly Trends: archiveDailySummary records metrics and getWeeklyTrendMetrics computes averages', () => {
+    const today = store.getLocalDateString ? store.getLocalDateString(0) : '2026-11-05';
+    const rec = store.archiveDailySummary(today);
+    assert.strictEqual(rec.date, today);
+    assert.strictEqual(typeof rec.waterMl, 'number');
+    assert.strictEqual(typeof rec.spent, 'number');
+
+    const trends = store.getWeeklyTrendMetrics();
+    assert.ok(trends.daysLogged >= 1);
+    assert.strictEqual(typeof trends.avgWaterMl, 'number');
+    assert.strictEqual(typeof trends.avgDailySpend, 'number');
+    assert.strictEqual(typeof trends.habitAdherenceRate, 'number');
+  });
+});

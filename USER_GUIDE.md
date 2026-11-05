@@ -1,5 +1,5 @@
 # 🧭 How to Never Get Lost
-## The Daily Compass v2.0 Pro Max Survival Manual for Overcoming Executive Dysfunction, Time Blindness & Cognitive Fatigue
+## The Daily Compass v2.1.0 Pro Max Plus Survival Manual for Overcoming Executive Dysfunction, Time Blindness & Cognitive Fatigue
 
 ---
 
@@ -15,19 +15,22 @@
 ## 📖 Table of Contents
 1. [Understanding Time Blindness & Interoceptive Lag](#1-understanding-time-blindness--interoceptive-lag)
 2. [The Anatomy of Orientation (The 3-Second Check)](#2-the-anatomy-of-orientation-the-3-second-check)
-3. [The Spoon Theory Energy Battery & Gentle Mode](#3-the-spoon-theory-energy-battery--gentle-mode)
-4. [Somatic Grounding: Hydration & Medication Double-Dose Safety Lock](#4-somatic-grounding-hydration--medication-double-dose-safety-lock)
-5. [The Schedule Quick-Shift Bar (Stopping the All-or-Nothing Domino Effect)](#5-the-schedule-quick-shift-bar-stopping-the-all-or-nothing-domino-effect)
-6. [Focus Sprints & Ambient Soundscapes (Pink Rain & 10Hz Alpha Waves)](#6-focus-sprints--ambient-soundscapes-pink-rain--10hz-alpha-waves)
-7. [Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)](#7-global-omnibar-command-palette-cmdk--ctrlk)
-8. [The 4-7-8 Grounding Engine ("Lost? Click to Center")](#8-the-4-7-8-grounding-engine-lost-click-to-center)
-9. [The Daily Cash Compass & End-of-Month Buffer Forecast](#9-the-daily-cash-compass--end-of-month-buffer-forecast)
-10. [Bilateral Debt Ledger ("Who Owes Who?")](#10-bilateral-debt-ledger-who-owes-who)
-11. [Micro-Habits & Pure SVG Weekly Heatmap](#11-micro-habits--pure-svg-weekly-heatmap)
-12. [The Brain Dump Wall (Working Memory Protection)](#12-the-brain-dump-wall-working-memory-protection)
-13. [Rolling Automated Snapshots (Time-Machine Safety Net)](#13-rolling-automated-snapshots-time-machine-safety-net)
-14. [Keyboard Shortcuts Reference Sheet](#14-keyboard-shortcuts-reference-sheet)
-15. [A Day in the Life: From Morning to Night](#15-a-day-in-the-life-from-morning-to-night)
+3. [Sculpting Routines with Live Duration & Auto-Balance](#3-sculpting-routines-with-live-duration--auto-balance)
+4. [Using Peek Privacy and Vault Lock (Public Grounding Safety)](#4-using-peek-privacy-and-vault-lock-public-grounding-safety)
+5. [The Spoon Theory Energy Battery & Gentle Mode](#5-the-spoon-theory-energy-battery--gentle-mode)
+6. [Somatic Grounding: Hydration & Medication Double-Dose Safety Lock](#6-somatic-grounding-hydration--medication-double-dose-safety-lock)
+7. [The Schedule Quick-Shift Bar (Stopping the All-or-Nothing Domino Effect)](#7-the-schedule-quick-shift-bar-stopping-the-all-or-nothing-domino-effect)
+8. [Focus Sprints & Ambient Soundscapes (Pink Rain & 10Hz Alpha Waves)](#8-focus-sprints--ambient-soundscapes-pink-rain--10hz-alpha-waves)
+9. [Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)](#9-global-omnibar-command-palette-cmdk--ctrlk)
+10. [Exporting Daily Journals to Obsidian & Notion](#10-exporting-daily-journals-to-obsidian--notion)
+11. [The 4-7-8 Grounding Engine ("Lost? Click to Center")](#11-the-4-7-8-grounding-engine-lost-click-to-center)
+12. [The Daily Cash Compass & End-of-Month Buffer Forecast](#12-the-daily-cash-compass--end-of-month-buffer-forecast)
+13. [Bilateral Debt Ledger ("Who Owes Who?")](#13-bilateral-debt-ledger-who-owes-who)
+14. [Micro-Habits & Pure SVG Weekly Heatmap](#14-micro-habits--pure-svg-weekly-heatmap)
+15. [The Brain Dump Wall (Working Memory Protection)](#15-the-brain-dump-wall-working-memory-protection)
+16. [Rolling Automated Snapshots (Time-Machine Safety Net)](#16-rolling-automated-snapshots-time-machine-safety-net)
+17. [Keyboard Shortcuts Reference Sheet](#17-keyboard-shortcuts-reference-sheet)
+18. [A Day in the Life: From Morning to Night](#18-a-day-in-the-life-from-morning-to-night)
 
 ---
 
@@ -67,7 +70,80 @@ Within 3 seconds, your brain absorbs three critical anchors:
 
 ---
 
-## 3. The Spoon Theory Energy Battery & Gentle Mode
+## 3. Sculpting Routines with Live Duration & Auto-Balance
+
+Scheduling daily blocks should never feel like filling out a tax form. When faced with rigid calendar tools, executive dysfunction triggers task avoidance. In Daily Compass v2.1.0, routine creation is tactile, soothing, and completely flexible.
+
+```
++-----------------------------------------------------------------------------------------------+
+| ✏️ EDIT ROUTINE BLOCK                                                                   [ × ] |
++-----------------------------------------------------------------------------------------------+
+| Routine Title:    [ Morning Awakening & Somatic Warmup                ]                       |
+| Category Mode:    [🎯 Focus]  [🌿 Rest]  [🥗 Nourish]  [🔄 Routine]  [🎨 Creative]  [🏃 Move] |
+| Time Bounds:      Start: [ 07:00 ]   End: [ 08:30 ]  -->  [ ⏱ 1h 30m Total Duration ]         |
+| Overnight:        [ ] Crosses midnight into next day (e.g. 23:00 -> 01:30)                    |
++-----------------------------------------------------------------------------------------------+
+| 📋 ORDERED MICRO-STEPS (Total: 70 min / 90 min allocated • 20 min buffer remaining)          |
+|                                                                                               |
+| 1. [::] Drink 500ml water & take vitamins      [ 10 min ]  [ ↑ ] [ ↓ ]  [ × Delete ]          |
+| 2. [::] Gentle 10-minute spine stretch          [ 15 min ]  [ ↑ ] [ ↓ ]  [ × Delete ]          |
+| 3. [::] High-protein breakfast & warm tea       [ 30 min ]  [ ↑ ] [ ↓ ]  [ × Delete ]          |
+| 4. [::] Open Daily Compass & set Focus Anchor   [ 15 min ]  [ ↑ ] [ ↓ ]  [ × Delete ]          |
+|                                                                                               |
+| [ + Add Micro-Step ]    [ 🪄 Auto-Balance Durations ]                                         |
++-----------------------------------------------------------------------------------------------+
+| [ 🗑️ Delete Routine ]                              [ Cancel ]   [ 💾 Save Routine Block ]      |
++-----------------------------------------------------------------------------------------------+
+```
+
+### How to Sculpt Your Routine:
+1. **Open the Editor:** On the Today tab, click **✏️ Edit Routine Blocks** above your schedule stream.
+2. **Live Duration Telemetry:** As you adjust start and end times, the **Duration Chip** automatically calculates total span (e.g. `⏱ 1h 30m`), eliminating manual time math.
+3. **Cross-Midnight Overnight Blocks:** Scheduling a night shift or late wind-down? Set start to `23:15` and end to `01:45`. The engine automatically detects midnight rollover, calculates `2h 30m`, and flags the block with a crescent moon (`🌙 Overnight`).
+4. **Category Mode Selector:** Assign a sensory mode pill:
+   - 🎯 **Focus** (`#4a7bb0`) — High-energy deep work and analysis.
+   - 🌿 **Rest** (`#60cd9b`) — Sensory decompression, rest, and meditation.
+   - 🥗 **Nourishment** (`#e5a960`) — Mindful meals, cooking, and hydration.
+   - 🔄 **Routine** (`#9aa5b5`) — Admin tasks, organizing, and chore checklists.
+   - 🎨 **Creative** (`#bc8cff`) — Brainstorming, design, and writing.
+   - 🏃 **Movement** (`#38bdf8`) — Walking, stretching, and physical activity.
+5. **Decomposing into Micro-Steps:** Add individual actions so you never face ambiguous tasks. Reorder steps with drag-and-drop handles (`⋮⋮`) or touch-friendly `[↑]` / `[↓]` pills.
+6. **🪄 1-Tap Auto-Balance Durations:** Unsure how to divide time? Click **🪄 Auto-Balance Durations**. The engine divides your total block time evenly across all micro-steps.
+7. **Compassionate Guidance:** If your steps total $105\text{m}$ in a $90\text{m}$ block, a soft amber notice advises you of the buffer difference—it never blocks saving or punishes you.
+
+---
+
+## 4. Using Peek Privacy and Vault Lock (Public Grounding Safety)
+
+Many neurodivergent individuals and remote workers use their laptops in public transit, coffee shops, coworking spaces, or around family. The dread of someone glancing over your shoulder at financial balances, debt ledgers, or private brain dumps induces acute anxiety and causes you to avoid opening your tracking cockpit.
+
+### The 1-Keystroke "Peek Privacy" Cloak:
+- **Keyboard Shortcut:** Press `Alt + M` from anywhere in the application.
+- **Header Action:** Click the **Eye icon** (`👁️` / `🔒`) located next to the Master Clock in the sticky top bar.
+- **Omnibar Command:** Type `+mask` in the Omnibar.
+
+```
+[ Normal View ]                      [ Peek Privacy Masked: Alt + M ]
+SAFE TO SPEND: $34.50         -->    SAFE TO SPEND: [ ••••••••• ] (Blurred)
+Sarah owes you: $45.00        -->    Sarah owes you: [ ••••••••• ] (Blurred)
+Note: Personal ADHD note      -->    Note: [ •••••••••••••••••• ] (Blurred)
+```
+
+- All sensitive currency figures, debt totals, and private notes are instantly cloaked behind a frosted slate Gaussian blur (`backdrop-filter: blur(8px)`).
+- **Hover-to-Peek:** Need to quickly check an amount? Simply hover your cursor over the blurred card—it temporarily clarifies without exposing the rest of the screen.
+
+### Securing the Vault with a Local PIN:
+To lock down the entire application when stepping away from your desk:
+1. Navigate to **Settings $\rightarrow$ Privacy Vault**.
+2. Enter a 4-to-8 digit numeric PIN (e.g. `8492`) and an optional hint.
+3. The app hashes your PIN using the native **Web Crypto API** with a 16-byte cryptographically secure random salt. Plaintext PINs are never stored.
+4. **Auto-Lock on Tab Switch:** Enable *"Auto-lock when tab is hidden"*. As soon as you switch browser tabs or close your laptop lid, the vault locks.
+5. **Non-Punitive Exponential Backoff:** Entering an incorrect PIN does not trigger hostile klaxons. It triggers a gentle horizontal card shake. Cooldown timers protect against brute-forcing (15s after 3 attempts, 60s after 5, 300s after 7).
+6. **The Emergency Reset Guarantee:** If you completely forget your PIN, click **Emergency Reset Vault** and type the phrase `"reset vault"`. The PIN is removed and the vault unlocks **without wiping your data**. Your routines, habits, and transactions are preserved 100%.
+
+---
+
+## 5. The Spoon Theory Energy Battery & Gentle Mode
 
 ### What is Spoon Theory?
 Created by Christine Miserandino, **Spoon Theory** posits that individuals with chronic illness, neurodivergence, or fatigue start each day with a finite number of energetic units ("spoons"). Every single physical and cognitive task—showering, masking in a meeting, answering an email, deciding what to eat—costs spoons. When you run out of spoons, pushing forward causes severe crash or burnout.
@@ -93,7 +169,7 @@ When your battery drops to $\le 20\%$ (or when you manually toggle **Gentle Mode
 
 ---
 
-## 4. Somatic Grounding: Hydration & Medication Double-Dose Safety Lock
+## 6. Somatic Grounding: Hydration & Medication Double-Dose Safety Lock
 
 ### 💧 The Hydration Ring
 Hyperfocus suppresses the sensation of thirst. Hours pass without drinking water, leading to tension headaches, mental fog, and afternoon crashes.
@@ -122,7 +198,7 @@ Accidentally taking a double dose of stimulant medication, blood pressure medica
 
 ---
 
-## 5. The Schedule Quick-Shift Bar (Stopping the All-or-Nothing Domino Effect)
+## 7. The Schedule Quick-Shift Bar (Stopping the All-or-Nothing Domino Effect)
 
 ### The ADHD "All-or-Nothing" Trap
 Neurodivergent individuals frequently suffer from rigid black-and-white thinking:
@@ -153,10 +229,10 @@ Instead of abandoning the day, Daily Compass lets you elastically shift reality 
 
 ---
 
-## 6. Focus Sprints & Ambient Soundscapes (Pink Rain & 10Hz Alpha Waves)
+## 8. Focus Sprints & Ambient Soundscapes (Pink Rain & 10Hz Alpha Waves)
 
 ### The Neurobiology of ADHD Auditory Flow
-ADHD brains are both easily distracted by sudden room sounds (doors slamming, sirens, office chatter) and under-stimulated by dead silence. Standard music with lyrics causes linguistic distraction, while off-the-shelf white noise generators produce a harsh high-frequency hiss that induces tension headaches.
+ADHD brains are easily distracted by sudden room sounds (doors slamming, sirens, office chatter) and under-stimulated by dead silence. Standard music with lyrics causes linguistic distraction, while off-the-shelf white noise generators produce a harsh high-frequency hiss that induces tension headaches.
 
 Daily Compass integrates a zero-dependency, mathematically synthesized continuous soundscape engine:
 
@@ -191,33 +267,16 @@ flowchart TD
 - **15-Minute Sprint:** For overcoming severe task paralysis. *"I only have to work for 15 minutes."*
 - **25-Minute Pomodoro:** Standard structured focus interval with a chime break.
 - **50-Minute Deep Block:** Extended immersion for programming, writing, or creative design.
-- Upon sprint completion, the active soundscape gently fades out, and the uplifting **Gentle Triad** chime plays.
 
 ---
 
-## 7. Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)
+## 9. Global Omnibar Command Palette (`Cmd+K` / `Ctrl+K`)
 
 For neurodivergent computer users, mouse navigation requires multiple eye movements and clicks, breaking working memory. The **Global Omnibar** brings desktop-class command palette speed to your entire cockpit.
 
 ### How to Open:
 - Press `Cmd + K` (Mac) or `Ctrl + K` (Windows / Linux).
 - Or click the **Omnibar** icon in the top header.
-
-```
-+-----------------------------------------------------------------------------------------------+
-|  🔍 [ Type a command ($ 12 lunch, +h 500, +shift 30) or search anything...               ]   |
-+-----------------------------------------------------------------------------------------------+
-|  SUGGESTIONS:                                                                                 |
-|  [ $ 14 lunch ]          Log Expense: $14.00 (lunch)                     [ Enter to Log ]     |
-|  [ +h 500 ]              Log Hydration: +500 ml                          [ Water ]            |
-|  [ +shift 30 ]           Shift Schedule: +30 minutes                     [ Time ]             |
-|  [ +bat low ]            Set Energy Battery to 20% (Gentle Mode)         [ Spoon ]            |
-|  [ +zen ]                Launch 4-7-8 Breathing Calmer                   [ Grounding ]        |
-|  Habit: 💧 Morning Hydration (500ml)                                     [ 5d streak ]        |
-|  Debt: Sarah ($45.00)                                                    [ unpaid ]           |
-|  Note: Pick up laundry from dry cleaner                                  [ To-Do ]            |
-+-----------------------------------------------------------------------------------------------+
-```
 
 ### Prefix Commands Reference:
 | Prefix | Example | Instant Action |
@@ -226,12 +285,35 @@ For neurodivergent computer users, mouse navigation requires multiple eye moveme
 | `+h [ml]` | `+h 500` | Logs $500\text{ml}$ hydration, updates progress ring, and plays droplet sound. |
 | `+shift [mins]` | `+shift 30` | Pushes active/upcoming routines forward by 30 minutes. |
 | `+bat [level]` | `+bat low` | Sets energy battery to $20\%$ and triggers Gentle Mode (`low`, `med`, `high`). |
+| `+mask` | `+mask` | Toggles Peek Privacy balance masking. |
 | `+zen` | `+zen` | Instantly opens the 4-7-8 Diaphragmatic Breathing modal. |
 | `[free text]` | `sarah` | Fuzzy searches across habits, debts, scratchpad notes, and routines. Press Enter to navigate. |
 
 ---
 
-## 8. The 4-7-8 Grounding Engine ("Lost? Click to Center")
+## 10. Exporting Daily Journals to Obsidian & Notion
+
+For neurodivergent knowledge workers, personal knowledge management (PKM) in tools like **Obsidian**, **Notion**, **Logseq**, or **Roam Research** is vital. Daily Compass v2.1.0 allows you to bridge your real-time daily cockpit directly into your permanent digital notebook with **zero manual copy-pasting**.
+
+### 1-Click Markdown Day Journal (`.md`):
+1. In the **Scratchpad** view or **Settings**, click **📄 Export Day Journal (Markdown)**.
+2. Daily Compass generates a complete, clean GitHub Flavored Markdown document titled `daily-compass-log-YYYY-MM-DD.md`.
+3. It includes structured sections:
+   - ⚡ **Energy & Grounding State:** Spoon capacity and Gentle Mode status.
+   - 💧 **Hydration & Medications:** Exact water tally and checked medication checklist.
+   - 📋 **Routines & Schedule Blocks:** Micro-step progress breakdown (`[x]` completed actions).
+   - 🌿 **Habits & Activities:** Day checkoffs and current active streaks.
+   - 💳 **Financial Ledger & Safety Buffer:** Cap, daily spend, safe-to-spend balance, and end-of-month forecast.
+   - 📝 **Scratchpad Entries:** Timestamped brain dump notes.
+4. Paste directly into your daily note in Obsidian or Notion for a permanent, searchable life archive.
+
+### 1-Click CSV Financial Ledger (`.csv`):
+- Click **📊 Export Transactions (CSV)** to download an RFC-4180 standard spreadsheet file (`Date,Time,Type,Category,Amount,Note`).
+- Open instantly in **Microsoft Excel**, **Apple Numbers**, or **Google Sheets** for end-of-year tax review or personal accounting.
+
+---
+
+## 11. The 4-7-8 Grounding Engine ("Lost? Click to Center")
 
 ### When to Use It:
 - You fell down an internet rabbit hole for 2 hours and feel sudden panic.
@@ -263,7 +345,7 @@ Once you take three grounding breaths, choose how you want to handle your day:
 
 ---
 
-## 9. The Daily Cash Compass & End-of-Month Buffer Forecast
+## 12. The Daily Cash Compass & End-of-Month Buffer Forecast
 
 ### Why Most Budget Apps Fail ADHD:
 Traditional budgeting requires categorizing 30 transactions, entering bank logins, and navigating complex charts. After 3 days, friction causes avoidance. Worse, red warning banners when you overspend induce shame.
@@ -299,18 +381,9 @@ In the **Cash** tab, tap any quick pill:
 
 One tap records the transaction, updates your Safe-to-Spend balance, updates the category breakdown chart, and plays a tactile woodblock click.
 
-### Subscriptions & End-of-Month Buffer Gauge
-- **Recurring Liabilities:** Track your fixed overhead (Cloud storage, gym membership, home broadband) with monthly billing days and 1-tap "Log Paid" verification.
-- **End-of-Month Buffer:** Calculates:
-  $$\text{Buffer} = \text{Monthly Pool} - \text{Spent This Month} - \text{Unpaid Subs} - (\text{Remaining Days} \times \text{Daily Cap})$$
-- Status tags provide instant clarity:
-  - 🟢 **Comfort Zone:** Buffer $> \text{Daily Cap}$. You are on track for a monthly surplus.
-  - 🟡 **Tight Margin:** Buffer is between $0$ and $\text{Daily Cap}$. Exercise caution on non-essential purchases.
-  - 🔴 **Deficit Warning:** Buffer $< 0$. Your current burn rate exceeds your monthly pool.
-
 ---
 
-## 10. Bilateral Debt Ledger ("Who Owes Who?")
+## 13. Bilateral Debt Ledger ("Who Owes Who?")
 
 People with ADHD frequently lend money to friends or borrow small amounts for lunch and forget the details, leading to awkwardness or lost funds.
 
@@ -328,7 +401,7 @@ People with ADHD frequently lend money to friends or borrow small amounts for lu
 
 ---
 
-## 11. Micro-Habits & Pure SVG Weekly Heatmap
+## 14. Micro-Habits & Pure SVG Weekly Heatmap
 
 ### The Flaw of "Don't Break the Chain":
 Traditional habit apps punish you. If you maintain a 45-day meditation streak and catch the flu for one day, your streak resets to 0. This triggers the **"What-The-Hell Effect"**—you feel defeated and abandon the app entirely.
@@ -341,15 +414,9 @@ Traditional habit apps punish you. If you maintain a 45-day meditation streak an
   - Subtle dark dots for rest days.
   - Visual streak badges celebrating consistency over perfection.
 
-### Filtering by Time of Day:
-At 8:00 AM, looking at evening habits causes mental clutter. Use the time-of-day tabs to see only what matters now:
-- **🌅 Morning** (Hydration, morning medication, sunlight exposure)
-- **☀️ Afternoon** (Screen break, walk, lunch)
-- **🌙 Evening** (Dim lights, evening log, wind-down)
-
 ---
 
-## 12. The Brain Dump Wall (Working Memory Protection)
+## 15. The Brain Dump Wall (Working Memory Protection)
 
 When you have ADHD, working memory is fragile. While working on a project, a random thought strikes: *"I need to order replacement water filters."*
 
@@ -370,34 +437,35 @@ When reviewing your Scratchpad later:
 
 ---
 
-## 13. Rolling Automated Snapshots (Time-Machine Safety Net)
+## 16. Rolling Automated Snapshots (Time-Machine Safety Net)
 
 Accidentally deleted a routine? Overwrote your preferences? Daily Compass includes a local **Time-Machine Safety Net**:
 - **Automatic Midnight Baselines:** A snapshot of your entire database is automatically captured at the start of each day.
+- **Pre-Mutation Checkpoints:** Whenever you delete a routine or make a major modification, an automated checkpoint is saved first.
 - **FIFO 12-Slot Rolling Window:** Retains your 7 daily baselines plus up to 5 user checkpoints.
-- **Manual Checkpoints:** Tap **+ Save Checkpoint** in Settings anytime before importing data or making major routine changes.
-- **1-Click Restore:** Tap **Restore** on any snapshot to instantly roll back your entire state.
+- **1-Click Restore:** Tap **Restore** on any snapshot in Settings to instantly roll back your entire state.
 
 ---
 
-## 14. Keyboard Shortcuts Reference Sheet
+## 17. Keyboard Shortcuts Reference Sheet
 
 Control your entire dashboard without touching the mouse:
 
 | Shortcut Key | Action / Module | Description |
 | :--- | :--- | :--- |
+| <kbd>Alt</kbd> + <kbd>M</kbd> | **Peek Privacy Toggle** | Instantly cloaks/uncloaks financial balances and sensitive notes behind Gaussian blur. |
 | <kbd>Cmd</kbd> + <kbd>K</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd> | **Global Omnibar** | Opens command palette for instant searches and command execution (`$ 12 lunch`, `+h 500`, `+shift 30`, `+bat low`). |
 | <kbd>F</kbd> | **Focus Mode Toggle** | Collapses headers, sidebar, and dock; isolates Master Clock, immediate micro-step, and safe-to-spend. |
 | <kbd>E</kbd> | **Energy Battery Cycle** | Cycles Spoon Theory battery level ($100\% \to 60\% \to 20\% \to 100\%$) and toggles Gentle Mode. |
 | <kbd>Alt</kbd> + <kbd>N</kbd> / <kbd>Cmd</kbd> + <kbd>N</kbd> | **Brain Dump Capture** | Immediately jumps focus to the Scratchpad input field for instant thought dumping. |
-| <kbd>Esc</kbd> | **Exit & Dismiss** | Closes any active modal (Omnibar, Sprint, Grounding, Alarms) or exits Focus Mode. |
+| <kbd>Esc</kbd> | **Exit & Dismiss** | Closes any active modal (Editor, Omnibar, Sprint, Grounding) or exits Focus Mode. |
 | <kbd>Enter</kbd> (in Omnibar) | **Execute First Action** | Instantly runs the highlighted Omnibar action or search result. |
 
 ---
 
-## 15. A Day in the Life: From Morning to Night
+## 18. A Day in the Life: From Morning to Night
 
-Here is how a calm, grounded day feels with Daily Compass v2.0 Pro Max:
+Here is how a calm, grounded day feels with Daily Compass v2.1.0 Pro Max Plus:
 
 ### 🌅 07:15 AM — Morning Wakeup & Somatic Anchoring
 - Your gentle **Zen Singing Bowl** chime sounds softly at 07:00 AM without startling your nervous system.
@@ -411,31 +479,27 @@ Here is how a calm, grounded day feels with Daily Compass v2.0 Pro Max:
 - Instead of abandoning the day, you press <kbd>Cmd+K</kbd>, type `+shift 30`, and press Enter.
 - Your entire schedule shifts smoothly by 30 minutes. Your bedtime at 22:30 is safely clamped. Zero guilt. Zero stress.
 
-### 🧠 10:00 AM — Entering Focus Sprint
+### ☕ 11:00 AM — Coffee Shop Grounding & Peek Privacy
+- You sit in a crowded coffee shop. A stranger sits right behind you.
+- You press <kbd>Alt+M</kbd>. Instantly, your Safe-to-Spend balance and debt tallies blur into soft slate blocks. You browse your routines in total peace of mind.
+- You hover your cursor over the coffee transaction to confirm it logged—it clarifies smoothly, then blurs when your mouse moves away.
+
+### 🧠 02:00 PM — Entering Focus Sprint
 - You click the **Focus Sprint** button and select the 25-minute block.
-- You activate **Pink Rain** and put on your headphones. The gentle $-3\text{dB}/\text{octave}$ rainfall masks office chatter.
+- You activate **Pink Rain** and put on your headphones. The gentle $-3\text{dB}/\text{octave}$ rainfall masks coffee shop chatter.
 - A sudden thought hits you: *"Order replacement guitar strings."*
 - You tap <kbd>Alt+N</kbd>, type `Order guitar strings [To-Buy]`, hit Enter, and immediately return to deep work.
 - The sprint concludes with a soft **Gentle Triad** arpeggio.
 
-### 🥗 12:45 PM — Lunch & Cash Tracking
-- You buy a $\$14.00$ grain bowl.
-- You tap <kbd>Cmd+K</kbd>, type `$ 14 lunch`, and press Enter.
-- The **Safe-to-Spend Today** gauge recalculates to $\$26.50$ remaining.
-- The **End-of-Month Buffer Forecast** confirms: `+$185.00 Comfort Zone`.
+### ✏️ 04:30 PM — Temporal Sculpting a Late Study Session
+- Your evening plans change. You click **✏️ Edit Routine Blocks**, choose the **Focus** pill, and set a new block from `20:00` to `22:00`.
+- You add 3 steps and tap **🪄 Auto-Balance Durations**. The 120 minutes are cleanly split into three 40-minute blocks.
 
-### ⚡ 03:45 PM — Afternoon Low Energy & Gentle Mode
-- After back-to-back presentations, your brain is exhausted.
-- You press `E` twice. Your Energy Battery drops to $20\%$.
-- **Gentle Mode** activates automatically: aggressive to-do items collapse, contrast softens, and streak shields deploy.
-- You tap **Lost? Click to Center** and follow the 4-7-8 breathing circle for 2 minutes. Your shoulders drop.
-
-### 🌙 09:30 PM — Evening Wind-Down
-- The evening chime rings softly.
-- You check your 7-day habit heatmap: 5 green checkmarks for the week.
-- You log your evening magnesium supplement.
+### 🌙 09:30 PM — Evening Journal Export & Wind-Down
+- You click **📄 Export Day Journal** in the Scratchpad.
+- A clean, beautiful Markdown file is generated. You paste it directly into your **Obsidian** daily journal vault.
 - The 24-hour day progress bar reaches $94\%$. You close your laptop knowing that your life is anchored, safe, and ready for tomorrow.
 
 ---
 
-*Daily Compass v2.0 Pro Max is 100% open source, local-first, and zero-dependency. Breathe easy and navigate your day.*
+*Daily Compass v2.1.0 Pro Max Plus is 100% open source, local-first, and zero-dependency. Breathe easy and navigate your day.*

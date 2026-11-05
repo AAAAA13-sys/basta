@@ -2,7 +2,7 @@
 **Codename:** Nordic Twilight v2 / Cognitive Ergonomics & Calming Telemetry  
 **Version:** 2.0.0 Pro Max  
 **Status:** Canonical Implementation Standard  
-**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md)  
+**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md) | Followed by [V2_1_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_1_DESIGN_SYSTEM.md)  
 **Target Environment:** Local-First Web Cockpit / Mobile-First PWA (Zero External CDN/Framework Dependencies)
 
 ---

@@ -2119,3 +2119,287 @@ body.gentle-mode-active .gentle-mode-banner {
 .snapshot-item:hover {
   border-color: var(--border-muted);
 }
+
+/* ==========================================================================
+   v2.1 PRO MAX PLUS — PRIVACY VAULT & MASKING ENGINE
+   ========================================================================== */
+
+[data-privacy-masked="true"] .privacy-sensitive-value {
+  filter: blur(8px) !important;
+  user-select: none !important;
+  pointer-events: none !important;
+  opacity: 0.55;
+  transition: filter var(--duration-normal) var(--ease-calm), opacity var(--duration-normal) var(--ease-calm);
+}
+
+[data-privacy-masked="true"] .privacy-sensitive-value:hover,
+[data-privacy-masked="true"] .privacy-sensitive-value:focus {
+  filter: blur(0px) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.btn-privacy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-calm);
+}
+
+.btn-privacy-toggle:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-muted);
+}
+
+.btn-privacy-toggle.active {
+  background-color: var(--accent-rose-bg);
+  border-color: var(--accent-rose-border);
+  color: var(--accent-rose-soft);
+}
+
+/* PIN Pad Modal */
+.pin-pad-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+}
+
+.pin-dots-display {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-muted);
+  background-color: transparent;
+  transition: all var(--duration-fast) var(--ease-spring);
+}
+
+.pin-dot.filled {
+  background-color: var(--accent-sage);
+  border-color: var(--accent-sage);
+  box-shadow: 0 0 8px rgba(96, 205, 155, 0.4);
+  transform: scale(1.15);
+}
+
+.pin-dot.error {
+  background-color: var(--accent-rose);
+  border-color: var(--accent-rose);
+  animation: gentle-shake 0.35s var(--ease-calm);
+}
+
+.pin-keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.pin-btn {
+  height: 54px;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-card-raised, #323a4d);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--ease-calm);
+}
+
+.pin-btn:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-muted);
+}
+
+.pin-btn:active {
+  transform: scale(0.96);
+  background-color: var(--accent-cobalt-bg);
+}
+
+.pin-btn-special {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+@keyframes gentle-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shake-gentle {
+  animation: gentle-shake 0.35s var(--ease-calm);
+}
+
+/* Routine Editor Modal */
+.routine-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.time-range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.duration-chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--accent-amber-bg);
+  border: 1px solid var(--accent-amber-border);
+  color: var(--accent-amber-soft);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.category-pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-pill {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-muted);
+  background-color: var(--bg-canvas-subtle);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-calm);
+}
+
+.category-pill:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.category-pill.selected {
+  background-color: var(--accent-cobalt-bg);
+  border-color: var(--accent-cobalt);
+  color: var(--accent-cobalt-soft);
+  font-weight: 600;
+}
+
+.step-builder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.step-builder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--bg-card-raised, #323a4d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.step-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 14px;
+  user-select: none;
+}
+
+.step-input-title {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.step-input-title:focus {
+  outline: none;
+}
+
+.step-input-duration {
+  width: 50px;
+  background-color: var(--bg-canvas-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: center;
+  padding: 4px;
+}
+
+.step-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.step-delete-btn:hover {
+  color: var(--accent-rose);
+  background-color: var(--accent-rose-bg);
+}
+
+/* Weekly Trend Sparkline / Mini Bar Container */
+.weekly-trends-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 48px;
+  padding: 6px 0;
+}
+
+.trend-bar-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.trend-bar-fill {
+  width: 100%;
+  max-width: 16px;
+  border-radius: 3px 3px 0 0;
+  background-color: var(--accent-cobalt);
+  transition: height 0.3s ease;
+}
+
+.trend-bar-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
