@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2026-11-05
+
+### 🚀 Android Emulator Target Deployment & Interactive Mobile Cockpit Enhancements
+
+Complete end-to-end native Android compilation and on-device execution on the running Android Studio Emulator (`emulator-5554`), with responsive overflow-free layout design and comprehensive interactive bottom sheet modals.
+
+### Added
+- **Interactive Beep Card Reload Telemetry Modal:**
+  - 1-tap tap-to-inspect on the Beep badge in the Byahe Tracker.
+  - Digital Beep card preview widget with live balance and train trip estimations.
+  - Quick-reload action chips (`+₱50`, `+₱100`, `+₱200`, `+₱500`).
+- **Mag-Log Quick Expense Bottom Sheet:**
+  - Floating Action Button (`+ Mag-Log`) with responsive anchoring.
+  - Instant Pinoy daily purchase category chips: 🚐 Jeep (₱15), 🛺 Trike (₱25), 🚆 MRT (₱24), 🍗 Jollijeep (₱60), 🍲 Karinderya (₱75), 🧋 Milktea (₱95), 🥤 Tubig (₱15), 🏪 Sari-Sari (₱40).
+  - Custom amount input and description field with immediate wallet deduction and daily allowance re-balancing.
+- **Interactive KKB & Abono Modal:**
+  - Dedicated `+ Add` trigger on the KKB card.
+  - Form fields for friend/debtor name, occasion/store, amount, and optional GCash mobile number.
+  - Separate 1-tap `💬 Copy Reminder` (copies non-awkward message for Messenger/Viber without premature settlement) and `✓ Paid` settlement button.
+- **Pixel-Perfect Responsive Layout:**
+  - Re-engineered AppBar and Card headers with `Expanded` and `Flexible` text wrappers to eliminate 100% of horizontal pixel overflows on narrow mobile viewports.
+
+### Fixed
+- **Android SDK & NDK Toolchain Alignment:**
+  - Resolved AGP 9.1 alpha incompatibility by pinning Android Gradle Plugin to `8.11.1` and Kotlin to `2.2.20`.
+  - Installed and configured authentic Android NDK `27.0.12077973` and CMake `3.22.1`.
+  - Synthesized platform target alignment for `android-36` in `D:\andoid\platforms`.
+- **100% Test Suite Verification:**
+  - 10 / 10 Flutter unit and widget tests passing (`flutter test`).
+  - 67 / 67 Node.js architectural tests passing across 12 suites (`node --test`).
+  - Total automated verification: 77 / 77 passing tests.
+
+---
+
 ## [3.0.0] - 2026-11-05
 
 ### 🇵🇭 Major Paradigm Pivot: Mobile Flutter & Dart Edition ("Pinoy Navigator")
