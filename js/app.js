@@ -475,7 +475,7 @@ function renderAnchorAndToday(state) {
   const spentToday = txs
     .filter(t => t.date === todayStr && t.type === 'expense')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-  const cap = state.profile?.dailyBudgetCap || 50;
+  const cap = state.profile?.dailyBudgetCap ?? 50;
   if (dom.metricSpentToday) {
     dom.metricSpentToday.textContent = `${formatCurrency(spentToday)} spent of ${formatCurrency(cap)} cap`;
   }
@@ -533,7 +533,7 @@ function renderAnchorAndToday(state) {
 
 // 2. Render Finance & Cash View
 function renderFinance(state) {
-  const cap = state.profile?.dailyBudgetCap || 50;
+  const cap = state.profile?.dailyBudgetCap ?? 50;
   const todayStr = getTodayDateString();
   const txs = state.cashTransactions || [];
 
@@ -542,7 +542,7 @@ function renderFinance(state) {
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const safeLeft = Math.max(0, cap - spentToday);
-  const percentUsed = Math.min(100, Math.round((spentToday / cap) * 100));
+  const percentUsed = cap > 0 ? Math.min(100, Math.round((spentToday / cap) * 100)) : (spentToday > 0 ? 100 : 0);
 
   if (dom.statDailyLimit) dom.statDailyLimit.textContent = formatCurrency(cap);
   if (dom.statTodaySpent) dom.statTodaySpent.textContent = formatCurrency(spentToday);
@@ -1413,3 +1413,4 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+

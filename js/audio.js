@@ -408,10 +408,12 @@ class AudioSynthesizer {
 
 // Singleton audio instance
 export const audio = new AudioSynthesizer();
+export const soundEngine = audio; // spec alias
 
 // Attach to window for script-tag vanilla access
 if (typeof window !== 'undefined') {
   window.DailyCompassAudio = audio;
+  window.soundEngine = audio;
 }
 
 export default audio;
