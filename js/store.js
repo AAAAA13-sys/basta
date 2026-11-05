@@ -1,6 +1,7 @@
 /**
- * Daily Compass — Foundational State Store
- * Manages local persistence, schema validation, event subscriptions, and data portability.
+ * Daily Compass — Foundational State Store (v2.0 Pro Max)
+ * Manages local persistence, schema validation, event subscriptions, data portability,
+ * and advanced modules (Hydration, Medications, Energy Battery, Schedule Shift, Subscriptions, Snapshots).
  * Storage Key: 'daily_compass_state_v1'
  * Zero external dependencies. 100% offline-first.
  */
@@ -552,7 +553,104 @@ export const DEFAULT_STATE = {
       status: 'active',
       convertedTo: null
     }
-  ]
+  ],
+
+  // =========================================================================
+  // v2.0 PRO MAX EXPANSION MODULES
+  // =========================================================================
+
+  // 1. Hydration Module
+  hydration: {
+    targetMl: 2000,
+    currentMl: 750,
+    history: [
+      { id: 'hyd-1', amount: 250, time: '07:30', timestamp: new Date().toISOString() },
+      { id: 'hyd-2', amount: 500, time: '11:00', timestamp: new Date().toISOString() }
+    ]
+  },
+
+  // 2. Medication & Supplement Checklist with Safety Lock
+  medications: [
+    {
+      id: 'med-1',
+      name: 'Multivitamin & Zinc',
+      dosage: '1 capsule',
+      timeSlot: 'morning',
+      withFood: true,
+      takenToday: true,
+      lastTakenAt: getLocalDateString(0) + 'T07:15:00.000Z'
+    },
+    {
+      id: 'med-2',
+      name: 'Omega-3 Fish Oil',
+      dosage: '1 softgel',
+      timeSlot: 'morning',
+      withFood: true,
+      takenToday: true,
+      lastTakenAt: getLocalDateString(0) + 'T07:15:00.000Z'
+    },
+    {
+      id: 'med-3',
+      name: 'Magnesium Glycinate',
+      dosage: '200mg',
+      timeSlot: 'evening',
+      withFood: false,
+      takenToday: false,
+      lastTakenAt: null
+    }
+  ],
+
+  // 3. Energy & Sensory Battery Gauge (Spoon Theory & Gentle Mode)
+  energyBattery: {
+    level: 80, // 20, 60, or 100
+    isGentleMode: false,
+    sensoryDrainers: [],
+    lastUpdated: new Date().toISOString()
+  },
+
+  // 4. Focus Sprint Timer & Ambient Soundscape State
+  focusSprint: {
+    active: false,
+    mode: 'pomodoro',
+    durationMinutes: 25,
+    remainingSeconds: 1500,
+    soundscape: 'pink-rain',
+    isPaused: false
+  },
+
+  // 5. Recurring Subscriptions & Monthly Cash Buffer Projection
+  subscriptions: [
+    {
+      id: 'sub-1',
+      name: 'Cloud Storage & Workspace',
+      amount: 9.99,
+      billingDay: 15,
+      cycle: 'monthly',
+      category: 'Digital',
+      isPaidThisMonth: false
+    },
+    {
+      id: 'sub-2',
+      name: 'Gym & Bouldering Membership',
+      amount: 35.00,
+      billingDay: 1,
+      cycle: 'monthly',
+      category: 'Health',
+      isPaidThisMonth: true
+    },
+    {
+      id: 'sub-3',
+      name: 'Home Fiber Broadband',
+      amount: 45.00,
+      billingDay: 20,
+      cycle: 'monthly',
+      category: 'Bills',
+      isPaidThisMonth: false
+    }
+  ],
+
+  // 6. Rolling Automated Snapshots
+  snapshots: []
 };
 
 /**
@@ -565,6 +663,7 @@ class StateStore {
     this.listeners = new Set();
     this.state = null;
     this.isStorageAvailable = this.checkStorageAvailability();
+    this._lastShiftBackup = null;
     this.init();
   }
 
@@ -646,8 +745,23 @@ class StateStore {
       };
     }
 
+    // v2 Object Modules
+    if (loadedState.hydration) {
+      base.hydration = {
+        ...base.hydration,
+        ...loadedState.hydration,
+        history: Array.isArray(loadedState.hydration.history) ? loadedState.hydration.history : base.hydration.history
+      };
+    }
+    if (loadedState.energyBattery) {
+      base.energyBattery = { ...base.energyBattery, ...loadedState.energyBattery };
+    }
+    if (loadedState.focusSprint) {
+      base.focusSprint = { ...base.focusSprint, ...loadedState.focusSprint };
+    }
+
     // Arrays: use loaded if valid array, otherwise base
-    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad'];
+    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad', 'medications', 'subscriptions', 'snapshots'];
     for (const key of arrayKeys) {
       if (Array.isArray(loadedState[key])) {
         base[key] = loadedState[key];
@@ -719,8 +833,7 @@ class StateStore {
   }
 
   /**
-   * Selectively updates a specific module (e.g. 'settings', 'anchor', 'alarms', 'cashTransactions').
-   * Supports values or updater functions: (prevModuleData) => nextModuleData.
+   * Selectively updates a specific module.
    */
   updateModule(moduleKey, updaterOrNewData) {
     if (!(moduleKey in this.state)) {
@@ -739,7 +852,6 @@ class StateStore {
       typeof updaterOrNewData === 'object' &&
       !Array.isArray(updaterOrNewData)
     ) {
-      // Shallow merge for plain object modules like settings or anchor
       nextModuleData = { ...currentModuleData, ...updaterOrNewData };
     } else {
       nextModuleData = deepClone(updaterOrNewData);
@@ -771,7 +883,6 @@ class StateStore {
 
   /**
    * Exports the entire application state as a structured, formatted JSON string.
-   * Conforms to Section 11.8 Full Backup Schema.
    */
   exportToJSON() {
     const snapshot = this.getState();
@@ -800,7 +911,13 @@ class StateStore {
       debtRecords: snapshot.debts, // spec alias
       habits: snapshot.habits,
       scratchpad: snapshot.scratchpad,
-      scratchpadItems: snapshot.scratchpad // spec alias
+      scratchpadItems: snapshot.scratchpad, // spec alias
+      hydration: snapshot.hydration,
+      medications: snapshot.medications,
+      energyBattery: snapshot.energyBattery,
+      focusSprint: snapshot.focusSprint,
+      subscriptions: snapshot.subscriptions,
+      snapshots: snapshot.snapshots
     };
 
     return JSON.stringify(payload, null, 2);
@@ -808,7 +925,6 @@ class StateStore {
 
   /**
    * Imports application state from a JSON string.
-   * Validates structure and supports both clean overwrite and merge modes.
    */
   importFromJSON(jsonString, options = { merge: false }) {
     if (typeof jsonString !== 'string' || !jsonString.trim()) {
@@ -829,10 +945,8 @@ class StateStore {
     const { merge = false } = options;
 
     if (!merge) {
-      // Overwrite / Restore Clean
       this.state = this.sanitizeAndMigrate(parsed);
     } else {
-      // Merge mode: combine arrays uniquely by ID, merge settings objects
       const current = this.getState();
 
       if (parsed.settings || parsed.profile || parsed.appSettings) {
@@ -883,6 +997,8 @@ class StateStore {
       mergeArray('debts', 'debtRecords');
       mergeArray('habits');
       mergeArray('scratchpad', 'scratchpadItems');
+      mergeArray('medications');
+      mergeArray('subscriptions');
 
       this.state = this.sanitizeAndMigrate(current);
     }
@@ -899,16 +1015,244 @@ class StateStore {
         cashTransactions: this.state.cashTransactions.length,
         debts: this.state.debts.length,
         habits: this.state.habits.length,
-        scratchpad: this.state.scratchpad.length
+        scratchpad: this.state.scratchpad.length,
+        medications: (this.state.medications || []).length,
+        subscriptions: (this.state.subscriptions || []).length
       }
+    };
+  }
+
+  // =========================================================================
+  // v2.0 PRO MAX EXTENSION METHODS
+  // =========================================================================
+
+  /**
+   * Log water intake in ml (capped at 6000ml max)
+   */
+  addWater(amountMl = 250) {
+    const cur = this.state.hydration || { targetMl: 2000, currentMl: 0, history: [] };
+    const newMl = Math.min(6000, Math.max(0, (cur.currentMl || 0) + Number(amountMl)));
+    const entry = {
+      id: generateId('hyd'),
+      amount: Number(amountMl),
+      time: new Date().toTimeString().slice(0, 5),
+      timestamp: new Date().toISOString()
+    };
+    const newHistory = [...(cur.history || []), entry];
+
+    this.updateModule('hydration', {
+      ...cur,
+      currentMl: newMl,
+      history: newHistory
+    });
+    return newMl;
+  }
+
+  /**
+   * Undo last water log
+   */
+  undoWater() {
+    const cur = this.state.hydration || { targetMl: 2000, currentMl: 0, history: [] };
+    if (!cur.history || cur.history.length === 0) return cur.currentMl;
+
+    const lastEntry = cur.history[cur.history.length - 1];
+    const newHistory = cur.history.slice(0, -1);
+    const newMl = Math.max(0, (cur.currentMl || 0) - (lastEntry.amount || 0));
+
+    this.updateModule('hydration', {
+      ...cur,
+      currentMl: newMl,
+      history: newHistory
+    });
+    return newMl;
+  }
+
+  /**
+   * Toggle medication taken status with timestamp recording
+   */
+  toggleMedication(medId) {
+    const list = this.state.medications || [];
+    let updatedMed = null;
+
+    const updatedList = list.map((m) => {
+      if (m.id === medId) {
+        const nextTaken = !m.takenToday;
+        updatedMed = {
+          ...m,
+          takenToday: nextTaken,
+          lastTakenAt: nextTaken ? new Date().toISOString() : null
+        };
+        return updatedMed;
+      }
+      return m;
+    });
+
+    this.updateModule('medications', updatedList);
+    return updatedMed;
+  }
+
+  /**
+   * Set energy battery level (20, 60, 100) with auto Gentle-Mode trigger at <= 20%
+   */
+  setEnergyLevel(level) {
+    const numLevel = Math.max(0, Math.min(100, Number(level)));
+    const shouldGentle = numLevel <= 20;
+
+    this.updateModule('energyBattery', {
+      level: numLevel,
+      isGentleMode: shouldGentle,
+      lastUpdated: new Date().toISOString()
+    });
+
+    return { level: numLevel, isGentleMode: shouldGentle };
+  }
+
+  /**
+   * Explicitly toggle Gentle Mode
+   */
+  toggleGentleMode(forceState) {
+    const cur = this.state.energyBattery || { level: 80, isGentleMode: false };
+    const nextState = typeof forceState === 'boolean' ? forceState : !cur.isGentleMode;
+    this.updateModule('energyBattery', {
+      ...cur,
+      isGentleMode: nextState
+    });
+    return nextState;
+  }
+
+  /**
+   * Schedule Quick-Shift Engine: Shifts remaining routines chronologically
+   * Clamps end boundary to 23:59 to protect sleep.
+   */
+  quickShiftSchedule(minutes = 15) {
+    this._lastShiftBackup = deepClone(this.state.routines);
+    const shiftMins = Number(minutes);
+    const now = new Date();
+    const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const toMinutes = (hhmm) => {
+      const [h, m] = hhmm.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const toHHMM = (totalMins) => {
+      const clamped = Math.min(1439, Math.max(0, totalMins));
+      const h = Math.floor(clamped / 60);
+      const m = clamped % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    const updatedRoutines = this.state.routines.map((r) => {
+      const routineEndMins = toMinutes(r.end);
+      const currentMins = toMinutes(currentHHMM);
+
+      // Only shift active or upcoming routines
+      if (routineEndMins >= currentMins) {
+        const newStartMins = toMinutes(r.start) + shiftMins;
+        const newEndMins = routineEndMins + shiftMins;
+        return {
+          ...r,
+          start: toHHMM(newStartMins),
+          startTime: toHHMM(newStartMins),
+          end: toHHMM(newEndMins),
+          endTime: toHHMM(newEndMins)
+        };
+      }
+      return r;
+    });
+
+    this.updateModule('routines', updatedRoutines);
+    return updatedRoutines;
+  }
+
+  /**
+   * Undo last schedule shift
+   */
+  undoQuickShift() {
+    if (this._lastShiftBackup) {
+      const restored = deepClone(this._lastShiftBackup);
+      this._lastShiftBackup = null;
+      this.updateModule('routines', restored);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Create an automated local snapshot (retains up to 12 snapshots: 7 daily + 5 action)
+   */
+  createAutoSnapshot(label = 'Manual Checkpoint') {
+    const curSnaps = this.state.snapshots || [];
+    const newSnapshot = {
+      id: generateId('snap'),
+      timestamp: new Date().toISOString(),
+      label,
+      state: this.getState()
+    };
+
+    // FIFO rotation: cap at 12
+    const rotated = [newSnapshot, ...curSnaps].slice(0, 12);
+    this.updateModule('snapshots', rotated);
+    return newSnapshot;
+  }
+
+  /**
+   * Restore state from a snapshot
+   */
+  restoreAutoSnapshot(snapshotId) {
+    const curSnaps = this.state.snapshots || [];
+    const snap = curSnaps.find((s) => s.id === snapshotId);
+    if (!snap || !snap.state) {
+      throw new Error(`[DailyCompass:Store] Snapshot not found: "${snapshotId}"`);
+    }
+    this.setState(snap.state);
+    return true;
+  }
+
+  /**
+   * End-of-Month Cash Buffer calculation
+   */
+  getEndMonthCashBuffer() {
+    const cap = Number(this.state.settings.dailyBudgetCap ?? 50);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const currentDay = now.getDate();
+    const remainingDays = Math.max(0, daysInMonth - currentDay);
+
+    const monthlyPool = cap * daysInMonth;
+    const currentMonthPrefix = getLocalDateString(0).slice(0, 7);
+
+    // Sum expenses this month
+    const spentThisMonth = (this.state.cashTransactions || [])
+      .filter((tx) => tx.type === 'expense' && (tx.date || '').startsWith(currentMonthPrefix))
+      .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+    // Sum unpaid subscriptions this month
+    const pendingSubs = (this.state.subscriptions || [])
+      .filter((s) => !s.isPaidThisMonth)
+      .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+
+    const projectedFutureDailySpend = remainingDays * cap;
+    const projectedBuffer = monthlyPool - spentThisMonth - pendingSubs - projectedFutureDailySpend;
+
+    let status = 'comfort'; // > 0
+    if (projectedBuffer < 0) status = 'deficit';
+    else if (projectedBuffer <= cap) status = 'tight';
+
+    return {
+      monthlyPool: Number(monthlyPool.toFixed(2)),
+      spentThisMonth: Number(spentThisMonth.toFixed(2)),
+      pendingSubscriptions: Number(pendingSubs.toFixed(2)),
+      remainingDays,
+      projectedBuffer: Number(projectedBuffer.toFixed(2)),
+      status
     };
   }
 
   // --- Convenience Helpers for UI Components ---
 
-  /**
-   * Appends an item to an array module with auto-generated id if missing
-   */
   addItem(moduleKey, item) {
     if (!Array.isArray(this.state[moduleKey])) {
       throw new Error(`[DailyCompass:Store] Module "${moduleKey}" is not an array.`);
@@ -921,9 +1265,6 @@ class StateStore {
     return itemWithId;
   }
 
-  /**
-   * Updates an item in an array module by ID
-   */
   updateItem(moduleKey, itemId, updates) {
     if (!Array.isArray(this.state[moduleKey])) {
       throw new Error(`[DailyCompass:Store] Module "${moduleKey}" is not an array.`);
@@ -941,9 +1282,6 @@ class StateStore {
     return found;
   }
 
-  /**
-   * Removes an item from an array module by ID
-   */
   deleteItem(moduleKey, itemId) {
     if (!Array.isArray(this.state[moduleKey])) {
       throw new Error(`[DailyCompass:Store] Module "${moduleKey}" is not an array.`);
@@ -952,32 +1290,23 @@ class StateStore {
     return true;
   }
 
-  /**
-   * Computes total expenses for a specific date (defaults to today)
-   */
   getExpensesTotal(dateString = getLocalDateString(0)) {
-    return this.state.cashTransactions
+    return (this.state.cashTransactions || [])
       .filter((tx) => tx.type === 'expense' && tx.date === dateString)
       .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
   }
 
-  /**
-   * Computes Safe-to-Spend cash remaining today
-   */
   getSafeToSpendToday() {
     const cap = Number(this.state.settings.dailyBudgetCap ?? 50);
     const spentToday = this.getExpensesTotal(getLocalDateString(0));
     return Number((cap - spentToday).toFixed(2));
   }
 
-  /**
-   * Computes Debt Summary: Net Balance, Total Receivable, Total Payable
-   */
   getDebtSummary() {
     let theyOweMe = 0;
     let iOweThem = 0;
 
-    for (const d of this.state.debts) {
+    for (const d of this.state.debts || []) {
       if (d.status === 'settled') continue;
       const rem = Number(d.remaining ?? d.remainingAmount ?? d.amount ?? 0);
       if (d.type === 'they_owe_me' || d.direction === 'lent') {

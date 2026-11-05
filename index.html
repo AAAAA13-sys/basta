@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Daily Compass — All-in-One Life Tracker</title>
-  <meta name="description" content="Calm, eye-friendly all-in-one daily tracker for alarms, cash flow, debt, routines, and focus grounding.">
+  <meta name="description" content="Calm, eye-friendly all-in-one daily tracker for alarms, cash flow, debt, routines, hydration, meds, and focus grounding.">
   <meta name="theme-color" content="#181c24">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,7 +25,7 @@
         </div>
         <div>
           <div class="brand-title">Daily Compass</div>
-          <div class="brand-subtitle">Anti-Overwhelm Tracker</div>
+          <div class="brand-subtitle">v2.0 Pro Max Operating System</div>
         </div>
       </div>
 
@@ -74,6 +74,26 @@
         </div>
 
         <div class="header-actions">
+          <!-- Energy Battery Gauge (Spoon Theory) -->
+          <div class="battery-pill battery-level-high" id="header-battery-pill" title="Energy Gauge: Click to cycle (100% -> 60% -> 20%) or Press 'E'">
+            <div class="battery-icon-wrap">
+              <div class="battery-bar-fill"></div>
+            </div>
+            <span class="battery-text" id="battery-text-level">80%</span>
+            <span class="gentle-badge" id="battery-gentle-badge" style="display: none;">Gentle</span>
+          </div>
+
+          <!-- Omnibar Search Trigger -->
+          <button class="btn-focus-toggle" id="btn-open-omnibar" title="Quick Omnibar Command Palette (Cmd+K / Ctrl+K)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Search (⌘K)</span>
+          </button>
+
+          <!-- Focus Sprint & Soundscape Trigger -->
+          <button class="btn-icon-action" id="btn-open-sprint" title="Focus Timer & Ambient Soundscapes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+
           <!-- Emergency Grounding Trigger -->
           <button class="btn-grounding" id="btn-header-grounding" title="Feeling lost or overwhelmed? Click for instant calm and re-centering">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
@@ -94,6 +114,12 @@
       </header>
 
       <div class="content-wrapper">
+        <!-- Gentle Mode Banner -->
+        <div class="gentle-mode-banner" id="gentle-mode-banner">
+          <span>🌿 <strong>Gentle Mode Active:</strong> Energy is low. High-pressure demands are softened. Hydrate and rest.</span>
+          <button class="btn-secondary" id="btn-exit-gentle" style="padding: 4px 10px; font-size: 11px;">Dismiss</button>
+        </div>
+
         <!-- Exit Focus Mode Banner (Shown only in Focus Mode) -->
         <div class="focus-exit-banner" id="focus-exit-banner">
           <span>🎯 <strong>Focus Mode Active:</strong> Peripheral clutter hidden. Doing one thing at a time.</span>
@@ -157,11 +183,11 @@
             </div>
 
             <div class="metric-card">
-              <div class="metric-icon-box" style="background: var(--accent-sky-bg); color: var(--accent-sky);">✅</div>
+              <div class="metric-icon-box" style="background: var(--accent-sky-bg); color: var(--accent-sky);">💧</div>
               <div class="metric-info">
-                <div class="metric-label">Daily Habits</div>
-                <div class="metric-value" id="metric-habits-ratio">3 / 5</div>
-                <div class="metric-sub">60% completed today</div>
+                <div class="metric-label">Hydration Progress</div>
+                <div class="metric-value" id="metric-water-ratio">750 / 2000 ml</div>
+                <div class="metric-sub" id="metric-water-sub">38% of daily goal</div>
               </div>
             </div>
 
@@ -184,7 +210,51 @@
             </div>
           </div>
 
-          <!-- Routine Blocks Stream -->
+          <!-- Hydration Ring & Medication Checklist Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">💧 Hydration & Daily Medication</div>
+                <div class="card-subtitle">Keep your physical vessel grounded with gentle tracking</div>
+              </div>
+              <button class="btn-secondary" id="btn-open-add-med" style="padding: 6px 12px; font-size: 12px;">+ Add Med</button>
+            </div>
+
+            <div class="hydration-section">
+              <!-- Circular SVG Water Meter -->
+              <div class="hydration-circle-box">
+                <svg class="hydration-circle-svg" viewBox="0 0 120 120">
+                  <circle class="hydration-circle-bg" cx="60" cy="60" r="54" />
+                  <circle class="hydration-circle-bar" id="water-progress-circle" cx="60" cy="60" r="54" />
+                </svg>
+                <div class="hydration-center-text">
+                  <div class="hydration-val" id="water-display-ml">750 ml</div>
+                  <div class="hydration-sub" id="water-display-target">/ 2000 ml</div>
+                </div>
+              </div>
+
+              <!-- Quick Water Tap Controls -->
+              <div class="hydration-controls">
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">⚡ 1-Tap Water Log:</div>
+                <div class="hydration-pills-row">
+                  <button class="btn-water-pill" id="btn-water-250">💧 +250ml Glass</button>
+                  <button class="btn-water-pill" id="btn-water-500">🚰 +500ml Bottle</button>
+                  <button class="btn-water-pill" id="btn-water-750">🍶 +750ml Flask</button>
+                  <button class="btn-secondary" id="btn-water-undo" style="padding: 6px 12px; font-size: 12px;">↶ Undo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medication Checklist -->
+            <div style="margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+              <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">💊 Today's Medication & Supplements:</div>
+              <div class="med-list" id="medications-list-container">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Routine Blocks Stream with Schedule Quick-Shift Bar -->
           <div class="card">
             <div class="card-header">
               <div>
@@ -192,9 +262,23 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 10"/></svg>
                   <span>Today's Routine Stream</span>
                 </div>
-                <div class="card-subtitle">Natural daily blocks so you never feel lost in the day</div>
+                <div class="card-subtitle">Natural daily blocks with one-tap schedule elastic quick-shifting</div>
               </div>
             </div>
+
+            <!-- Schedule Quick-Shift Bar (Anti-Derailment Superpower) -->
+            <div class="schedule-shift-bar">
+              <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">
+                ⏳ Running late or delayed? Shift remaining routine blocks:
+              </div>
+              <div class="shift-pills-group">
+                <button class="btn-shift-pill" id="btn-shift-15">+15 mins</button>
+                <button class="btn-shift-pill" id="btn-shift-30">+30 mins</button>
+                <button class="btn-shift-pill" id="btn-shift-60">+1 hour</button>
+                <button class="btn-shift-pill" id="btn-snap-now" style="color: var(--accent-amber);">⚡ Snap to Now</button>
+              </div>
+            </div>
+
             <div class="timeline-stream" id="today-routine-stream">
               <!-- Dynamically populated from routines store -->
             </div>
@@ -202,7 +286,7 @@
         </section>
 
         <!-- =================================================================
-             VIEW 2: CASH FLOW & DEBT TRACKER
+             VIEW 2: CASH FLOW, RECURRING BILLS & DEBT TRACKER
              ================================================================= -->
         <section class="view-section" id="view-finance">
           <!-- Daily Budget Hero Card -->
@@ -244,6 +328,53 @@
                 <button class="pill-expense" data-amt="12.00" data-cat="Food" data-icon="🍔">🍔 $12.00 Meal</button>
                 <button class="pill-expense" data-amt="20.00" data-cat="Groceries" data-icon="🛒">🛒 $20.00 Groceries</button>
                 <button class="pill-expense" data-amt="7.50" data-cat="Snack" data-icon="🥪">🥪 $7.50 Snack</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recurring Subscriptions & Monthly Buffer Projection -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 Recurring Subscriptions & Month Buffer</div>
+                <div class="card-subtitle">Keep bills under control and forecast your cash buffer at month-end</div>
+              </div>
+              <button class="btn-primary" id="btn-open-add-sub" style="padding: 6px 14px; font-size: 12px;">+ Add Subscription</button>
+            </div>
+
+            <!-- Buffer Gauge Card -->
+            <div class="buffer-gauge-card" id="buffer-gauge-card">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">End-of-Month Projected Cash Buffer:</span>
+                <span style="font-family: var(--font-mono); font-size: 20px; font-weight: 700;" id="buffer-forecast-val">+$185.00</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted);" id="buffer-forecast-desc">
+                Comfort zone: At current spending, you will finish the month with a healthy surplus.
+              </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">Active Subscriptions:</div>
+              <div class="sub-grid" id="subscriptions-list-grid">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Expense Category Breakdown (Pure SVG Donut & Bars) -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📊 Spending Category Breakdown</div>
+              <div class="card-subtitle">Zero external charting libraries. 100% accessible pure SVG.</div>
+            </div>
+            <div class="chart-container-flex">
+              <div class="chart-svg-box">
+                <svg id="svg-category-donut" viewBox="0 0 160 160" width="100%" height="100%">
+                  <!-- Rendered dynamically -->
+                </svg>
+              </div>
+              <div class="chart-legend-list" id="category-legend-list">
+                <!-- Rendered dynamically -->
               </div>
             </div>
           </div>
@@ -303,9 +434,22 @@
         </section>
 
         <!-- =================================================================
-             VIEW 3: HABITS & ALARMS
+             VIEW 3: HABITS, ALARMS & WEEKLY CONSISTENCY
              ================================================================= -->
         <section class="view-section" id="view-routines">
+          <!-- Weekly Consistency Heatmap (Pure SVG / HTML) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🔥 7-Day Consistency Heatmap</div>
+                <div class="card-subtitle">Non-punitive weekly visual momentum with Streak-Shield protection</div>
+              </div>
+            </div>
+            <div class="heatmap-container" id="weekly-heatmap-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
           <!-- Daily Habits Section -->
           <div class="card">
             <div class="card-header">
@@ -373,7 +517,7 @@
         </section>
 
         <!-- =================================================================
-             VIEW 5: SETTINGS & BACKUP
+             VIEW 5: SETTINGS, RECOVERY & BACKUP
              ================================================================= -->
         <section class="view-section" id="view-settings">
           <div class="card">
@@ -409,6 +553,11 @@
               </div>
 
               <div class="form-group">
+                <label class="form-label">Daily Water Goal (ml)</label>
+                <input type="number" step="100" min="500" max="6000" class="form-input" id="pref-water-goal" value="2000">
+              </div>
+
+              <div class="form-group">
                 <label class="form-label">Default Alarm Chime</label>
                 <select class="form-select" id="pref-sound-preset">
                   <option value="zen-bowl">Zen Singing Bowl (432 Hz)</option>
@@ -424,13 +573,31 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">Synthesizer Soundboard Preview</div>
-              <div class="card-subtitle">Click to test browser-synthesized sounds</div>
+              <div class="card-subtitle">Click to test browser-synthesized chimes & soundscapes</div>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              <button class="btn-secondary" id="preview-zen-bowl">🧘 Test Zen Bowl</button>
-              <button class="btn-secondary" id="preview-triad">🎵 Test Major Triad</button>
-              <button class="btn-secondary" id="preview-bell">🔔 Test Attentive Bell</button>
-              <button class="btn-secondary" id="preview-tick">🪵 Test Micro Tick</button>
+              <button class="btn-secondary" id="preview-zen-bowl">🧘 Zen Bowl</button>
+              <button class="btn-secondary" id="preview-triad">🎵 Major Triad</button>
+              <button class="btn-secondary" id="preview-bell">🔔 Attentive Bell</button>
+              <button class="btn-secondary" id="preview-tick">🪵 Micro Tick</button>
+              <button class="btn-secondary" id="preview-water">💧 Water Drop</button>
+              <button class="btn-secondary" id="preview-rain">🌧️ Pink Rain Stream</button>
+              <button class="btn-secondary" id="preview-alpha">🧠 10Hz Alpha Waves</button>
+              <button class="btn-secondary" id="preview-drone">☸️ Tibetan Drone</button>
+            </div>
+          </div>
+
+          <!-- Rolling Automated Snapshots & Time-Machine Recovery -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🛡️ Rolling Automated Snapshots (Time-Machine)</div>
+                <div class="card-subtitle">Local automated safety net: 1-click restore if you ever make an accidental change</div>
+              </div>
+              <button class="btn-primary" id="btn-create-snapshot" style="padding: 6px 14px; font-size: 12px;">+ Save Checkpoint</button>
+            </div>
+            <div class="snapshot-list" id="snapshots-list-container">
+              <!-- Dynamically populated -->
             </div>
           </div>
 
@@ -462,7 +629,7 @@
           <div class="card" style="border-color: var(--accent-sky-border); background: var(--accent-sky-bg);">
             <div class="card-title" style="color: var(--accent-sky);">🚀 GitHub Pages & Mobile PWA Ready</div>
             <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px;">
-              This app is completely serverless and requires zero build tools. You can push this folder directly to any GitHub repository and enable GitHub Pages under <strong>Settings &gt; Pages</strong> to use it at <code>https://yourusername.github.io/daily-tracker</code>. On mobile Safari or Chrome, tap <strong>"Add to Home Screen"</strong> to use it as a native offline app!
+              This app is completely serverless and requires zero build tools. Push this repository to GitHub and enable Pages under <strong>Settings &gt; Pages</strong> to deploy at <code>https://yourusername.github.io/daily-tracker/</code>. On iOS Safari or Android Chrome, tap <strong>"Add to Home Screen"</strong> for native offline app support!
             </div>
           </div>
         </section>
@@ -492,6 +659,12 @@
         <span>Settings</span>
       </button>
     </nav>
+  </div>
+
+  <!-- Floating Schedule Shift Undo Toast -->
+  <div class="shift-toast-undo" id="shift-toast-undo">
+    <span>⏳ <strong id="shift-toast-text">Schedule shifted +15m.</strong></span>
+    <button class="btn-secondary" id="btn-undo-shift" style="padding: 4px 10px; font-size: 12px;">↶ Undo (60s)</button>
   </div>
 
   <!-- =========================================================================
@@ -568,7 +741,66 @@
     </div>
   </div>
 
-  <!-- 3. Add / Edit Cash Transaction Modal -->
+  <!-- 3. Global Command Palette / Omnibar Modal (Cmd+K / Ctrl+K) -->
+  <div class="modal-backdrop" id="modal-omnibar">
+    <div class="omnibar-wrapper">
+      <div class="omnibar-input-row">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--accent-sky);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="omnibar-input" id="omnibar-search-input" placeholder="Type a command ($ 12 lunch, +h 500, +shift 30) or search anything..." autofocus>
+        <button class="btn-icon-action" id="btn-close-omnibar" style="width: 28px; height: 28px;">&times;</button>
+      </div>
+
+      <div style="padding: 8px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; flex-wrap: wrap; gap: 6px;">
+        <span class="omnibar-badge">$ [amt] [note]</span>
+        <span class="omnibar-badge">+h [ml]</span>
+        <span class="omnibar-badge">+shift [mins]</span>
+        <span class="omnibar-badge">+bat [low|med|high]</span>
+        <span class="omnibar-badge">+zen</span>
+      </div>
+
+      <div class="omnibar-results-list" id="omnibar-results-list">
+        <!-- Filtered items render dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Focus Sprint & Ambient Soundscapes Modal -->
+  <div class="modal-backdrop" id="modal-sprint">
+    <div class="modal-container" style="max-width: 440px;">
+      <div class="card-header">
+        <div class="card-title">⏱️ Focus Sprint & Soundscapes</div>
+        <button class="btn-icon-action" id="btn-close-sprint">&times;</button>
+      </div>
+
+      <div class="sprint-timer-card">
+        <div class="sprint-clock" id="sprint-timer-display">25:00</div>
+        <div style="font-size: 13px; color: var(--text-secondary);" id="sprint-status-text">Ready to enter flow state</div>
+
+        <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
+          <button class="btn-primary" id="btn-sprint-toggle" style="flex: 1; padding: 10px;">▶ Start Sprint</button>
+          <button class="btn-secondary" id="btn-sprint-reset" style="padding: 10px;">Reset</button>
+        </div>
+
+        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 4px;">
+          <button class="btn-secondary" id="btn-sprint-15" style="padding: 4px 10px; font-size: 12px;">15m Sprint</button>
+          <button class="btn-secondary active" id="btn-sprint-25" style="padding: 4px 10px; font-size: 12px;">25m Pomodoro</button>
+          <button class="btn-secondary" id="btn-sprint-50" style="padding: 4px 10px; font-size: 12px;">50m Deep</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Continuous Ambient Soundscapes:</div>
+        <div class="soundscape-chips-row">
+          <button class="chip-soundscape" data-soundscape="pink-rain" id="chip-pink-rain">🌧️ Pink Rain</button>
+          <button class="chip-soundscape" data-soundscape="alpha-waves" id="chip-alpha-waves">🧠 10Hz Alpha</button>
+          <button class="chip-soundscape" data-soundscape="tibetan-drone" id="chip-tibetan-drone">🧘 Tibetan Drone</button>
+          <button class="chip-soundscape" data-soundscape="mute" id="chip-mute-soundscape">🔇 Mute</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Add / Edit Cash Transaction Modal -->
   <div class="modal-backdrop" id="modal-transaction">
     <div class="modal-container">
       <div class="card-header">
@@ -620,7 +852,7 @@
     </div>
   </div>
 
-  <!-- 4. Add / Edit Debt Record Modal -->
+  <!-- 6. Add / Edit Debt Record Modal -->
   <div class="modal-backdrop" id="modal-debt">
     <div class="modal-container">
       <div class="card-header">
@@ -668,7 +900,7 @@
     </div>
   </div>
 
-  <!-- 5. Settle / Pay Debt Modal -->
+  <!-- 7. Settle / Pay Debt Modal -->
   <div class="modal-backdrop" id="modal-settle-debt">
     <div class="modal-container">
       <div class="card-header">
@@ -695,7 +927,7 @@
     </div>
   </div>
 
-  <!-- 6. Add / Edit Alarm Modal -->
+  <!-- 8. Add / Edit Alarm Modal -->
   <div class="modal-backdrop" id="modal-alarm">
     <div class="modal-container">
       <div class="card-header">
@@ -731,7 +963,7 @@
     </div>
   </div>
 
-  <!-- 7. Add / Edit Habit Modal -->
+  <!-- 9. Add / Edit Habit Modal -->
   <div class="modal-backdrop" id="modal-habit">
     <div class="modal-container">
       <div class="card-header">
@@ -767,10 +999,86 @@
     </div>
   </div>
 
+  <!-- 10. Add Medication Modal -->
+  <div class="modal-backdrop" id="modal-medication">
+    <div class="modal-container">
+      <div class="card-header">
+        <div class="card-title">Add Medication / Supplement</div>
+        <button class="btn-icon-action" id="btn-close-med">&times;</button>
+      </div>
+      <form id="form-medication" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Medication Name</label>
+          <input type="text" required class="form-input" id="med-name" placeholder="e.g. Vitamin D3 & K2">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dosage</label>
+          <input type="text" required class="form-input" id="med-dosage" placeholder="e.g. 2000 IU / 1 capsule">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Time Slot</label>
+          <select class="form-select" id="med-timeslot">
+            <option value="morning">Morning 🌅</option>
+            <option value="afternoon">Afternoon ☀️</option>
+            <option value="evening">Evening 🌙</option>
+            <option value="bedtime">Bedtime 💤</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-secondary" id="btn-cancel-med">Cancel</button>
+          <button type="submit" class="btn-primary">Save Medication</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 11. Add Subscription Modal -->
+  <div class="modal-backdrop" id="modal-subscription">
+    <div class="modal-container">
+      <div class="card-header">
+        <div class="card-title">Add Recurring Subscription / Bill</div>
+        <button class="btn-icon-action" id="btn-close-sub">&times;</button>
+      </div>
+      <form id="form-subscription" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Service / Bill Name</label>
+          <input type="text" required class="form-input" id="sub-name" placeholder="e.g. Spotify / Home Internet">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <input type="number" step="0.01" min="0.01" required class="form-input" id="sub-amount" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Monthly Billing Day (1-31)</label>
+          <input type="number" min="1" max="31" required class="form-input" id="sub-billing-day" value="15">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="sub-category">
+            <option value="Digital">Digital / Software 💻</option>
+            <option value="Bills">Bills & Utilities 💡</option>
+            <option value="Health">Health & Fitness 🏃</option>
+            <option value="Other">Other 📦</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-secondary" id="btn-cancel-sub">Cancel</button>
+          <button type="submit" class="btn-primary">Save Subscription</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- App Scripts -->
   <script type="module" src="js/store.js"></script>
   <script type="module" src="js/audio.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
-

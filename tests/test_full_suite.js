@@ -109,9 +109,20 @@ class MockBiquadFilterNode extends MockAudioNode {
   }
 }
 
+class MockAudioBufferSourceNode extends MockAudioNode {
+  constructor() {
+    super();
+    this.buffer = null;
+    this.loop = false;
+  }
+  start() { this.isStarted = true; }
+  stop() { this.isStopped = true; }
+}
+
 class MockAudioContext {
   constructor() {
     this.currentTime = 0;
+    this.sampleRate = 44100;
     this.state = 'running';
     this.destination = new MockAudioNode();
     this.createdNodes = [];
@@ -128,6 +139,25 @@ class MockAudioContext {
   }
   createBiquadFilter() {
     const node = new MockBiquadFilterNode();
+    this.createdNodes.push(node);
+    return node;
+  }
+  createBuffer(channels, length, sampleRate) {
+    return {
+      numberOfChannels: channels,
+      length,
+      sampleRate,
+      getChannelData: () => new Float32Array(length)
+    };
+  }
+  createBufferSource() {
+    const node = new MockAudioBufferSourceNode();
+    this.createdNodes.push(node);
+    return node;
+  }
+  createStereoPanner() {
+    const node = new MockAudioNode();
+    node.pan = new MockAudioParam(0);
     this.createdNodes.push(node);
     return node;
   }
@@ -779,5 +809,133 @@ describe('Suite 6: Web Audio Sound Synthesizer', () => {
     // Reset to pleasant default
     soundEngine.setMasterVolume(0.7);
     assert.strictEqual(soundEngine.getMasterVolume(), 0.7);
+  });
+});
+
+// ============================================================================
+// SUITE 7: v2.0 PRO MAX EXPANSION SUBSYSTEMS
+// ============================================================================
+describe('Suite 7: v2.0 Pro Max Expansion Subsystems', () => {
+  beforeEach(() => {
+    mockStorageInstance.clear();
+    store.resetToDefaults();
+  });
+
+  test('Hydration Tracker: addWater, undoWater, and boundary capping', () => {
+    store.updateModule('hydration', { targetMl: 2000, currentMl: 0, history: [] });
+
+    store.addWater(250);
+    let hyd = store.getState().hydration;
+    assert.strictEqual(hyd.currentMl, 250);
+    assert.strictEqual(hyd.history.length, 1);
+
+    store.addWater(500);
+    hyd = store.getState().hydration;
+    assert.strictEqual(hyd.currentMl, 750);
+    assert.strictEqual(hyd.history.length, 2);
+
+    // Undo last intake
+    store.undoWater();
+    hyd = store.getState().hydration;
+    assert.strictEqual(hyd.currentMl, 250);
+    assert.strictEqual(hyd.history.length, 1);
+
+    // Upper boundary capping at 6000ml
+    store.addWater(10000);
+    hyd = store.getState().hydration;
+    assert.strictEqual(hyd.currentMl, 6000);
+  });
+
+  test('Medication Tracker: toggleMedication updates taken status and timestamp', () => {
+    const medId = 'med-test-1';
+    store.addItem('medications', {
+      id: medId,
+      name: 'Omega-3',
+      dosage: '1 softgel',
+      timeSlot: 'morning',
+      takenToday: false,
+      lastTakenAt: null
+    });
+
+    // Mark taken
+    const taken = store.toggleMedication(medId);
+    assert.strictEqual(taken.takenToday, true);
+    assert.ok(taken.lastTakenAt !== null);
+
+    // Untake
+    const untaken = store.toggleMedication(medId);
+    assert.strictEqual(untaken.takenToday, false);
+    assert.strictEqual(untaken.lastTakenAt, null);
+  });
+
+  test('Energy Battery Gauge: auto-triggers Gentle Mode at <= 20%', () => {
+    // 60% medium
+    const med = store.setEnergyLevel(60);
+    assert.strictEqual(med.level, 60);
+    assert.strictEqual(med.isGentleMode, false);
+    assert.strictEqual(store.getState().energyBattery.isGentleMode, false);
+
+    // 20% low: auto-triggers Gentle Mode
+    const low = store.setEnergyLevel(20);
+    assert.strictEqual(low.level, 20);
+    assert.strictEqual(low.isGentleMode, true);
+    assert.strictEqual(store.getState().energyBattery.isGentleMode, true);
+
+    // Manual override
+    store.toggleGentleMode(false);
+    assert.strictEqual(store.getState().energyBattery.isGentleMode, false);
+  });
+
+  test('Schedule Quick-Shift Engine: advances routines and undoes cleanly', () => {
+    store.updateModule('routines', [
+      { id: 'r1', start: '20:00', end: '21:00', title: 'Evening Work' }
+    ]);
+
+    // Shift +30 mins
+    store.quickShiftSchedule(30);
+    let routines = store.getState().routines;
+    assert.strictEqual(routines[0].start, '20:30');
+    assert.strictEqual(routines[0].end, '21:30');
+
+    // Undo shift
+    const undone = store.undoQuickShift();
+    assert.strictEqual(undone, true);
+    routines = store.getState().routines;
+    assert.strictEqual(routines[0].start, '20:00');
+    assert.strictEqual(routines[0].end, '21:00');
+  });
+
+  test('End-of-Month Cash Buffer: calculates monthly pool and status', () => {
+    const buffer = store.getEndMonthCashBuffer();
+    assert.strictEqual(typeof buffer.monthlyPool, 'number');
+    assert.strictEqual(typeof buffer.projectedBuffer, 'number');
+    assert.strictEqual(typeof buffer.remainingDays, 'number');
+    assert.ok(['comfort', 'tight', 'deficit'].includes(buffer.status));
+  });
+
+  test('Rolling Automated Snapshots: creates snapshot, caps rotation, and restores', () => {
+    // Create checkpoints
+    const snap1 = store.createAutoSnapshot('Checkpoint 1');
+    assert.ok(snap1.id);
+    assert.strictEqual(snap1.label, 'Checkpoint 1');
+
+    // Mutate state
+    store.updateModule('settings', { currency: '€' });
+    assert.strictEqual(store.getState().settings.currency, '€');
+
+    // Restore Checkpoint 1
+    store.restoreAutoSnapshot(snap1.id);
+    assert.strictEqual(store.getState().settings.currency, '$');
+  });
+
+  test('Web Audio Ambient Soundscapes: starts, tracks active, and stops', () => {
+    assert.strictEqual(soundEngine.isSoundscapePlaying(), false);
+
+    soundEngine.startSoundscape('pink-rain', 0.5);
+    assert.strictEqual(soundEngine.isSoundscapePlaying(), true);
+    assert.strictEqual(soundEngine.getActiveSoundscape(), 'pink-rain');
+
+    soundEngine.stopSoundscape();
+    assert.strictEqual(soundEngine.getActiveSoundscape(), null);
   });
 });

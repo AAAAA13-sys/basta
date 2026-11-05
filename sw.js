@@ -3,7 +3,7 @@
    100% Offline Progressive Web App Caching
    ========================================================================== */
 
-const CACHE_NAME = 'daily-compass-v1.0.0';
+const CACHE_NAME = 'daily-compass-v2.0.0';
 const STATIC_ASSETS = [
   './',
   './index.html',

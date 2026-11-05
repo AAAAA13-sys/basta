@@ -1,27 +1,42 @@
 /* ==========================================================================
-   DAILY COMPASS - APPLICATION CONTROLLER (js/app.js)
-   Anti-overwhelm life tracker, audio triggers, and local-first UI
+   DAILY COMPASS — APPLICATION CONTROLLER (js/app.js)
+   v2.0 Pro Max Operating System:
+   - Anti-overwhelm focus anchor & live clock
+   - Energy battery gauge (Spoon theory) & Gentle Mode
+   - Hydration ring & Medication tracker with double-dose safety lock
+   - Schedule elastic quick-shift engine (+15m, +30m, +1h, Snap to now)
+   - Focus Sprint timer (15m, 25m, 50m) & Procedural ambient soundscapes (Pink Rain, 10Hz Alpha, Tibetan Drone)
+   - Global Omnibar command palette (Cmd+K / Ctrl+K)
+   - Recurring subscriptions & End-of-month cash buffer projection
+   - Pure SVG Weekly habit heatmap & Category breakdown donut chart
+   - 7-Day Rolling automated snapshots & time-machine recovery
+   - Web Audio harmonic chimes and alarms loop
    ========================================================================== */
 
-import { store } from './store.js';
+import { store, getLocalDateString } from './store.js';
 import { soundEngine } from './audio.js';
 
-// --- State Variables ---
+// --- Global UI State Variables ---
 let currentView = 'today';
 let currentDebtTab = 'they_owe_me';
 let currentTxFilter = 'all';
 let currentScratchTag = 'All';
 let isFocusMode = false;
-let firedAlarmsToday = new Set(); // Prevent duplicate alarm rings in the same minute
+let firedAlarmsToday = new Set();
 let breathingInterval = null;
 
-// --- Helper Utilities ---
+// Focus Sprint Timer State
+let sprintTimerInterval = null;
+let sprintSecondsRemaining = 25 * 60;
+let sprintIsRunning = false;
+let sprintModeMinutes = 25;
+
+// Schedule Shift Undo Timeout
+let shiftUndoTimeout = null;
+
+// --- Helper Formatting Utilities ---
 function getTodayDateString() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return getLocalDateString(0);
 }
 
 function formatCurrency(amount) {
@@ -44,18 +59,36 @@ function formatTimeString(hhmm, format = '12h') {
 
 // --- DOM References ---
 const dom = {
-  // Views
+  // Navigation & Views
   views: document.querySelectorAll('.view-section'),
   sidebarNavItems: document.querySelectorAll('.nav-menu .nav-item'),
   mobileDockBtns: document.querySelectorAll('.mobile-dock-btn'),
-  
-  // Headers & Clocks
+
+  // Header & Clock
   headerTime: document.getElementById('header-time-clock'),
   headerDate: document.getElementById('header-date-text'),
   heroClock: document.getElementById('hero-master-clock'),
   heroDate: document.getElementById('hero-master-date'),
   dayProgressPercent: document.getElementById('day-progress-percent'),
   dayProgressBar: document.getElementById('day-progress-bar'),
+
+  // Energy Battery & Gentle Mode
+  headerBatteryPill: document.getElementById('header-battery-pill'),
+  batteryTextLevel: document.getElementById('battery-text-level'),
+  batteryGentleBadge: document.getElementById('battery-gentle-badge'),
+  gentleModeBanner: document.getElementById('gentle-mode-banner'),
+  btnExitGentle: document.getElementById('btn-exit-gentle'),
+
+  // Header Quick Action Buttons
+  btnOpenOmnibar: document.getElementById('btn-open-omnibar'),
+  btnOpenSprint: document.getElementById('btn-open-sprint'),
+  btnHeaderGrounding: document.getElementById('btn-header-grounding'),
+  btnSidebarGrounding: document.getElementById('btn-sidebar-grounding'),
+  btnFocusToggle: document.getElementById('btn-focus-toggle'),
+  focusToggleLabel: document.getElementById('focus-toggle-label'),
+  focusExitBanner: document.getElementById('focus-exit-banner'),
+  btnExitFocus: document.getElementById('btn-exit-focus'),
+  btnQuickNote: document.getElementById('btn-quick-note'),
 
   // Anchor / Today
   anchorRoutineChip: document.getElementById('anchor-routine-chip'),
@@ -64,24 +97,40 @@ const dom = {
   btnCompleteImmediate: document.getElementById('btn-complete-immediate-step'),
   todayRoutineStream: document.getElementById('today-routine-stream'),
 
-  // Quick Metrics
+  // Quick Metrics Row
   metricSafeSpend: document.getElementById('metric-safe-spend'),
   metricSpentToday: document.getElementById('metric-spent-today'),
-  metricHabitsRatio: document.getElementById('metric-habits-ratio'),
+  metricWaterRatio: document.getElementById('metric-water-ratio'),
+  metricWaterSub: document.getElementById('metric-water-sub'),
   metricNextAlarm: document.getElementById('metric-next-alarm'),
   metricNextAlarmLabel: document.getElementById('metric-next-alarm-label'),
   metricNetDebt: document.getElementById('metric-net-debt'),
 
-  // Badges in Sidebar
+  // Sidebar Badges
   sidebarStepBadge: document.getElementById('sidebar-step-badge'),
   sidebarSafeBadge: document.getElementById('sidebar-safe-badge'),
   sidebarHabitBadge: document.getElementById('sidebar-habit-badge'),
+  sidebarNotesBadge: document.getElementById('sidebar-notes-badge'),
 
-  // Focus Mode
-  btnFocusToggle: document.getElementById('btn-focus-toggle'),
-  focusToggleLabel: document.getElementById('focus-toggle-label'),
-  focusExitBanner: document.getElementById('focus-exit-banner'),
-  btnExitFocus: document.getElementById('btn-exit-focus'),
+  // Hydration & Medications
+  waterProgressCircle: document.getElementById('water-progress-circle'),
+  waterDisplayMl: document.getElementById('water-display-ml'),
+  waterDisplayTarget: document.getElementById('water-display-target'),
+  btnWater250: document.getElementById('btn-water-250'),
+  btnWater500: document.getElementById('btn-water-500'),
+  btnWater750: document.getElementById('btn-water-750'),
+  btnWaterUndo: document.getElementById('btn-water-undo'),
+  medicationsListContainer: document.getElementById('medications-list-container'),
+  btnOpenAddMed: document.getElementById('btn-open-add-med'),
+
+  // Schedule Quick-Shift Bar & Toast
+  btnShift15: document.getElementById('btn-shift-15'),
+  btnShift30: document.getElementById('btn-shift-30'),
+  btnShift60: document.getElementById('btn-shift-60'),
+  btnSnapNow: document.getElementById('btn-snap-now'),
+  shiftToastUndo: document.getElementById('shift-toast-undo'),
+  shiftToastText: document.getElementById('shift-toast-text'),
+  btnUndoShift: document.getElementById('btn-undo-shift'),
 
   // Cash / Budget
   statDailyLimit: document.getElementById('stat-daily-limit'),
@@ -95,6 +144,17 @@ const dom = {
   filterTxExpense: document.getElementById('filter-tx-expense'),
   filterTxIncome: document.getElementById('filter-tx-income'),
 
+  // Subscriptions & Month Buffer
+  btnOpenAddSub: document.getElementById('btn-open-add-sub'),
+  bufferForecastVal: document.getElementById('buffer-forecast-val'),
+  bufferForecastDesc: document.getElementById('buffer-forecast-desc'),
+  bufferGaugeCard: document.getElementById('buffer-gauge-card'),
+  subscriptionsListGrid: document.getElementById('subscriptions-list-grid'),
+
+  // Expense Donut Chart (Pure SVG)
+  svgCategoryDonut: document.getElementById('svg-category-donut'),
+  categoryLegendList: document.getElementById('category-legend-list'),
+
   // Debt & Credit
   tabDebtLent: document.getElementById('tab-debt-lent'),
   tabDebtBorrowed: document.getElementById('tab-debt-borrowed'),
@@ -105,6 +165,7 @@ const dom = {
   btnOpenAddDebt: document.getElementById('btn-open-add-debt'),
 
   // Habits & Alarms
+  weeklyHeatmapContainer: document.getElementById('weekly-heatmap-container'),
   habitsListGrid: document.getElementById('habits-list-grid'),
   btnOpenAddHabit: document.getElementById('btn-open-add-habit'),
   alarmsListContainer: document.getElementById('alarms-list-container'),
@@ -116,26 +177,32 @@ const dom = {
   btnSaveScratchpad: document.getElementById('btn-save-scratchpad'),
   scratchTagFilters: document.getElementById('scratch-tag-filters'),
   scratchpadNotesGrid: document.getElementById('scratchpad-notes-grid'),
-  btnQuickNote: document.getElementById('btn-quick-note'),
 
-  // Settings & Sound
+  // Settings & Snapshots
   prefCurrency: document.getElementById('pref-currency'),
   prefTimeFormat: document.getElementById('pref-time-format'),
   prefBudgetCap: document.getElementById('pref-budget-cap'),
+  prefWaterGoal: document.getElementById('pref-water-goal'),
   prefSoundPreset: document.getElementById('pref-sound-preset'),
+  snapshotsListContainer: document.getElementById('snapshots-list-container'),
+  btnCreateSnapshot: document.getElementById('btn-create-snapshot'),
   btnExportBackup: document.getElementById('btn-export-backup'),
   fileImportBackup: document.getElementById('file-import-backup'),
   btnLoadSampleData: document.getElementById('btn-load-sample-data'),
   btnResetData: document.getElementById('btn-reset-data'),
+
+  // Sound Preview Buttons
   previewZenBowl: document.getElementById('preview-zen-bowl'),
   previewTriad: document.getElementById('preview-triad'),
   previewBell: document.getElementById('preview-bell'),
   previewTick: document.getElementById('preview-tick'),
+  previewWater: document.getElementById('preview-water'),
+  previewRain: document.getElementById('preview-rain'),
+  previewAlpha: document.getElementById('preview-alpha'),
+  previewDrone: document.getElementById('preview-drone'),
 
   // Modals
   modalGrounding: document.getElementById('modal-grounding'),
-  btnSidebarGrounding: document.getElementById('btn-sidebar-grounding'),
-  btnHeaderGrounding: document.getElementById('btn-header-grounding'),
   btnCloseGrounding: document.getElementById('btn-close-grounding'),
   breathingInstruction: document.getElementById('breathing-instruction'),
   groundingDateIndicator: document.getElementById('grounding-date-indicator'),
@@ -150,6 +217,25 @@ const dom = {
   btnSnooze5: document.getElementById('btn-snooze-5'),
   btnSnooze10: document.getElementById('btn-snooze-10'),
   btnSnooze15: document.getElementById('btn-snooze-15'),
+
+  modalOmnibar: document.getElementById('modal-omnibar'),
+  omnibarSearchInput: document.getElementById('omnibar-search-input'),
+  omnibarResultsList: document.getElementById('omnibar-results-list'),
+  btnCloseOmnibar: document.getElementById('btn-close-omnibar'),
+
+  modalSprint: document.getElementById('modal-sprint'),
+  sprintTimerDisplay: document.getElementById('sprint-timer-display'),
+  sprintStatusText: document.getElementById('sprint-status-text'),
+  btnSprintToggle: document.getElementById('btn-sprint-toggle'),
+  btnSprintReset: document.getElementById('btn-sprint-reset'),
+  btnSprint15: document.getElementById('btn-sprint-15'),
+  btnSprint25: document.getElementById('btn-sprint-25'),
+  btnSprint50: document.getElementById('btn-sprint-50'),
+  chipPinkRain: document.getElementById('chip-pink-rain'),
+  chipAlphaWaves: document.getElementById('chip-alpha-waves'),
+  chipTibetanDrone: document.getElementById('chip-tibetan-drone'),
+  chipMuteSoundscape: document.getElementById('chip-mute-soundscape'),
+  btnCloseSprint: document.getElementById('btn-close-sprint'),
 
   modalTransaction: document.getElementById('modal-transaction'),
   btnCloseTx: document.getElementById('btn-close-tx'),
@@ -191,7 +277,24 @@ const dom = {
   formHabit: document.getElementById('form-habit'),
   habitName: document.getElementById('habit-name'),
   habitIcon: document.getElementById('habit-icon'),
-  habitTimeOfDay: document.getElementById('habit-time-of-day')
+  habitTimeOfDay: document.getElementById('habit-time-of-day'),
+
+  modalMedication: document.getElementById('modal-medication'),
+  btnCloseMed: document.getElementById('btn-close-med'),
+  btnCancelMed: document.getElementById('btn-cancel-med'),
+  formMedication: document.getElementById('form-medication'),
+  medName: document.getElementById('med-name'),
+  medDosage: document.getElementById('med-dosage'),
+  medTimeslot: document.getElementById('med-timeslot'),
+
+  modalSubscription: document.getElementById('modal-subscription'),
+  btnCloseSub: document.getElementById('btn-close-sub'),
+  btnCancelSub: document.getElementById('btn-cancel-sub'),
+  formSubscription: document.getElementById('form-subscription'),
+  subName: document.getElementById('sub-name'),
+  subAmount: document.getElementById('sub-amount'),
+  subBillingDay: document.getElementById('sub-billing-day'),
+  subCategory: document.getElementById('sub-category')
 };
 
 // ==========================================================================
@@ -200,18 +303,18 @@ const dom = {
 function switchView(viewName) {
   currentView = viewName;
 
-  dom.views.forEach(v => {
+  dom.views.forEach((v) => {
     v.classList.remove('active');
     if (v.id === `view-${viewName}`) {
       v.classList.add('active');
     }
   });
 
-  dom.sidebarNavItems.forEach(item => {
+  dom.sidebarNavItems.forEach((item) => {
     item.classList.toggle('active', item.dataset.view === viewName);
   });
 
-  dom.mobileDockBtns.forEach(btn => {
+  dom.mobileDockBtns.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.view === viewName);
   });
 
@@ -274,7 +377,6 @@ function initClockAndRoutines() {
       if (dom.anchorRoutineChip) {
         dom.anchorRoutineChip.textContent = `Routine: ${currentRoutine.title}`;
       }
-      // Calculate remaining minutes
       const [endH, endM] = currentRoutine.end.split(':').map(Number);
       const endTotalM = endH * 60 + endM;
       const nowTotalM = now.getHours() * 60 + now.getMinutes();
@@ -310,7 +412,7 @@ function checkAlarms(currentHHMM, currentDayIndex) {
   const triggerKey = `${currentHHMM}-${currentDayIndex}`;
 
   if (firedAlarmsToday.has(triggerKey)) {
-    return; // Already triggered this minute
+    return;
   }
 
   for (const alarm of alarms) {
@@ -337,10 +439,7 @@ function triggerAlarmRing(alarm) {
     dom.ringingAlarmLabel.textContent = alarm.label || 'Alarm Notification';
   }
 
-  // Open ringing modal overlay
   dom.modalAlarmRinging.classList.add('open');
-
-  // Start continuous chime loop via Web Audio API
   soundEngine.playAlarmLoop(soundPreset, 3.2);
 }
 
@@ -390,7 +489,7 @@ function closeGroundingModal() {
 
 function startBreathingCycle() {
   if (breathingInterval) clearInterval(breathingInterval);
-  let phase = 0; // 0: Inhale (4s), 1: Hold (7s), 2: Exhale (8s)
+  let phase = 0;
   const instructions = [
     { text: 'Breathe In (4s)', duration: 4000 },
     { text: 'Hold Gentle (7s)', duration: 7000 },
@@ -415,12 +514,14 @@ function applyGroundingAction(actionType) {
   closeGroundingModal();
 
   if (actionType === 'breather') {
-    alert('⏳ 15-Minute Breather Activated.\nAlarms delayed. Take your time to reset.');
+    store.quickShiftSchedule(15);
+    alert('⏳ 15-Minute Breather Activated.\nSchedule advanced by 15 mins. Take your time to reset.');
   } else if (actionType === 'catchup') {
     switchView('today');
     alert('⚡ Schedule Re-Aligned to Now.\nPast incomplete routine blocks are gently cleared. Start fresh with this hour.');
   } else if (actionType === 'rest') {
-    alert('🌿 Rest Mode Enabled.\nTake it easy today. Only essential self-care is highlighted.');
+    store.setEnergyLevel(20);
+    alert('🌿 Rest Mode Enabled.\nTake it easy today. Gentle Mode is active and streak shields are deployed.');
   }
 }
 
@@ -440,40 +541,361 @@ function toggleFocusMode(forceState) {
 }
 
 // ==========================================================================
-// RENDER & UPDATE VIEWS
+// FOCUS SPRINT TIMER & AMBIENT SOUNDSCAPES
+// ==========================================================================
+function openFocusSprintModal() {
+  dom.modalSprint.classList.add('open');
+  soundEngine.playPreset('micro-tick');
+}
+
+function closeFocusSprintModal() {
+  dom.modalSprint.classList.remove('open');
+}
+
+function setSprintMode(minutes) {
+  sprintModeMinutes = minutes;
+  sprintSecondsRemaining = minutes * 60;
+  pauseSprintTimer();
+  updateSprintDisplay();
+
+  dom.btnSprint15.classList.toggle('active', minutes === 15);
+  dom.btnSprint25.classList.toggle('active', minutes === 25);
+  dom.btnSprint50.classList.toggle('active', minutes === 50);
+}
+
+function toggleSprintTimer() {
+  if (sprintIsRunning) {
+    pauseSprintTimer();
+  } else {
+    startSprintTimer();
+  }
+}
+
+function startSprintTimer() {
+  sprintIsRunning = true;
+  dom.btnSprintToggle.textContent = '⏸ Pause Sprint';
+  dom.sprintStatusText.textContent = `Focusing in ${sprintModeMinutes}m block...`;
+
+  if (sprintTimerInterval) clearInterval(sprintTimerInterval);
+  sprintTimerInterval = setInterval(() => {
+    sprintSecondsRemaining -= 1;
+    updateSprintDisplay();
+
+    if (sprintSecondsRemaining <= 0) {
+      clearInterval(sprintTimerInterval);
+      sprintTimerInterval = null;
+      sprintIsRunning = false;
+      dom.btnSprintToggle.textContent = '▶ Start Sprint';
+      dom.sprintStatusText.textContent = '🎉 Sprint complete! Take a breather.';
+      soundEngine.playPreset('gentle-triad');
+      soundEngine.stopSoundscape();
+      alert(`🎉 Sprint finished! Great focus session. Drink water and stretch.`);
+    }
+  }, 1000);
+}
+
+function pauseSprintTimer() {
+  sprintIsRunning = false;
+  if (sprintTimerInterval) {
+    clearInterval(sprintTimerInterval);
+    sprintTimerInterval = null;
+  }
+  dom.btnSprintToggle.textContent = '▶ Start Sprint';
+  dom.sprintStatusText.textContent = 'Sprint paused';
+}
+
+function resetSprintTimer() {
+  pauseSprintTimer();
+  sprintSecondsRemaining = sprintModeMinutes * 60;
+  updateSprintDisplay();
+  dom.sprintStatusText.textContent = 'Ready to enter flow state';
+}
+
+function updateSprintDisplay() {
+  const m = Math.floor(sprintSecondsRemaining / 60);
+  const s = sprintSecondsRemaining % 60;
+  const str = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  dom.sprintTimerDisplay.textContent = str;
+}
+
+function setSoundscape(type) {
+  const chips = [dom.chipPinkRain, dom.chipAlphaWaves, dom.chipTibetanDrone, dom.chipMuteSoundscape];
+  chips.forEach((c) => c && c.classList.remove('active'));
+
+  if (type === 'mute' || soundEngine.getActiveSoundscape() === type) {
+    soundEngine.stopSoundscape();
+    if (dom.chipMuteSoundscape) dom.chipMuteSoundscape.classList.add('active');
+  } else {
+    soundEngine.startSoundscape(type, 0.4);
+    if (type === 'pink-rain' && dom.chipPinkRain) dom.chipPinkRain.classList.add('active');
+    if (type === 'alpha-waves' && dom.chipAlphaWaves) dom.chipAlphaWaves.classList.add('active');
+    if (type === 'tibetan-drone' && dom.chipTibetanDrone) dom.chipTibetanDrone.classList.add('active');
+  }
+}
+
+// ==========================================================================
+// GLOBAL OMNIBAR COMMAND PALETTE (Cmd+K / Ctrl+K)
+// ==========================================================================
+function openOmnibar() {
+  dom.modalOmnibar.classList.add('open');
+  dom.omnibarSearchInput.value = '';
+  renderOmnibarResults('');
+  setTimeout(() => dom.omnibarSearchInput.focus(), 50);
+}
+
+function closeOmnibar() {
+  dom.modalOmnibar.classList.remove('open');
+}
+
+function renderOmnibarResults(query = '') {
+  const q = query.trim().toLowerCase();
+  const state = store.getState();
+  const results = [];
+
+  // Prefix Command Handlers
+  if (q.startsWith('$ ')) {
+    const raw = q.slice(2).trim();
+    const [amtStr, ...noteParts] = raw.split(' ');
+    const amt = parseFloat(amtStr);
+    const note = noteParts.join(' ') || 'Quick expense';
+    if (!isNaN(amt)) {
+      results.push({
+        title: `Log Expense: $${amt.toFixed(2)} (${note})`,
+        badge: 'Enter to Log',
+        action: () => {
+          store.addItem('cashTransactions', {
+            date: getTodayDateString(),
+            time: new Date().toTimeString().slice(0, 5),
+            timestamp: new Date().toISOString(),
+            type: 'expense',
+            amount: amt,
+            category: 'Misc',
+            note
+          });
+          soundEngine.playPreset('micro-tick');
+        }
+      });
+    }
+  }
+
+  if (q.startsWith('+h ')) {
+    const ml = parseInt(q.slice(3).trim(), 10);
+    if (!isNaN(ml) && ml > 0) {
+      results.push({
+        title: `Log Hydration: +${ml} ml`,
+        badge: 'Water',
+        action: () => {
+          store.addWater(ml);
+          soundEngine.playPreset('water-drop');
+        }
+      });
+    }
+  }
+
+  if (q.startsWith('+shift ')) {
+    const mins = parseInt(q.slice(7).trim(), 10);
+    if (!isNaN(mins)) {
+      results.push({
+        title: `Shift Schedule: +${mins} minutes`,
+        badge: 'Time',
+        action: () => {
+          store.quickShiftSchedule(mins);
+          soundEngine.playPreset('micro-tick');
+          showShiftUndoToast(`Shifted schedule +${mins}m`);
+        }
+      });
+    }
+  }
+
+  if (q.startsWith('+zen')) {
+    results.push({
+      title: 'Launch 4-7-8 Breathing Calmer',
+      badge: 'Grounding',
+      action: openGroundingModal
+    });
+  }
+
+  if (q.startsWith('+bat ')) {
+    const levelStr = q.slice(5).trim();
+    const lvl = levelStr === 'low' ? 20 : levelStr === 'med' ? 60 : 100;
+    results.push({
+      title: `Set Energy Battery to ${lvl}%`,
+      badge: 'Spoon',
+      action: () => {
+        store.setEnergyLevel(lvl);
+        soundEngine.playPreset('micro-tick');
+      }
+    });
+  }
+
+  // Cross-Module Search: Habits, Debts, Scratchpad, Routines
+  (state.habits || []).forEach((h) => {
+    if (!q || h.title.toLowerCase().includes(q)) {
+      results.push({
+        title: `Habit: ${h.icon || '✨'} ${h.title}`,
+        badge: `${h.streak}d streak`,
+        action: () => {
+          switchView('routines');
+        }
+      });
+    }
+  });
+
+  (state.debts || []).forEach((d) => {
+    const person = d.person || d.counterpartyName || '';
+    if (!q || person.toLowerCase().includes(q) || (d.note || '').toLowerCase().includes(q)) {
+      results.push({
+        title: `Debt: ${person} ($${d.remaining ?? d.amount})`,
+        badge: d.status || 'unpaid',
+        action: () => {
+          switchView('finance');
+        }
+      });
+    }
+  });
+
+  (state.scratchpad || []).forEach((n) => {
+    const txt = n.text || n.content || '';
+    if (!q || txt.toLowerCase().includes(q)) {
+      results.push({
+        title: `Note: ${txt.slice(0, 40)}`,
+        badge: n.tag || 'Scratch',
+        action: () => {
+          switchView('scratchpad');
+        }
+      });
+    }
+  });
+
+  // Render list
+  if (results.length === 0) {
+    dom.omnibarResultsList.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted);">No matching actions or records found.</div>`;
+    return;
+  }
+
+  dom.omnibarResultsList.innerHTML = results.slice(0, 8).map((r, i) => `
+    <div class="omnibar-item ${i === 0 ? 'active' : ''}" data-idx="${i}">
+      <div>
+        <strong style="color: var(--text-primary); font-size: 14px;">${r.title}</strong>
+      </div>
+      <span class="omnibar-badge">${r.badge}</span>
+    </div>
+  `).join('');
+
+  // Store actions in DOM nodes for click execution
+  dom.omnibarResultsList.querySelectorAll('.omnibar-item').forEach((el, idx) => {
+    el.addEventListener('click', () => {
+      closeOmnibar();
+      results[idx].action();
+    });
+  });
+}
+
+function showShiftUndoToast(msg) {
+  if (shiftUndoTimeout) clearTimeout(shiftUndoTimeout);
+  dom.shiftToastText.textContent = msg;
+  dom.shiftToastUndo.classList.add('show');
+
+  shiftUndoTimeout = setTimeout(() => {
+    dom.shiftToastUndo.classList.remove('show');
+  }, 60000);
+}
+
+// ==========================================================================
+// RENDER & UPDATE VIEWS (v2.0 PRO MAX)
 // ==========================================================================
 function renderAll() {
   const state = store.getState();
+  renderEnergyBattery(state);
+  renderHydrationAndMeds(state);
   renderAnchorAndToday(state);
-  renderFinance(state);
+  renderFinanceAndSubscriptions(state);
   renderDebt(state);
-  renderHabitsAndAlarms(state);
+  renderHabitsAndHeatmap(state);
   renderScratchpad(state);
-  renderSettings(state);
+  renderSettingsAndSnapshots(state);
 }
 
-// 1. Render Anchor & Today View
+// 1. Render Energy Battery & Gentle Mode
+function renderEnergyBattery(state) {
+  const bat = state.energyBattery || { level: 80, isGentleMode: false };
+  const lvl = bat.level ?? 80;
+  const isGentle = bat.isGentleMode || lvl <= 20;
+
+  if (dom.batteryTextLevel) dom.batteryTextLevel.textContent = `${lvl}%`;
+  if (dom.batteryGentleBadge) dom.batteryGentleBadge.style.display = isGentle ? 'inline-block' : 'none';
+
+  if (dom.headerBatteryPill) {
+    dom.headerBatteryPill.className = 'battery-pill ' + (lvl <= 20 ? 'battery-level-low' : lvl <= 60 ? 'battery-level-med' : 'battery-level-high');
+  }
+
+  document.body.classList.toggle('gentle-mode-active', isGentle);
+}
+
+// 2. Render Hydration & Medications
+function renderHydrationAndMeds(state) {
+  const hyd = state.hydration || { targetMl: 2000, currentMl: 0 };
+  const target = hyd.targetMl || 2000;
+  const cur = hyd.currentMl || 0;
+  const percent = Math.min(100, Math.round((cur / target) * 100));
+
+  if (dom.waterDisplayMl) dom.waterDisplayMl.textContent = `${cur} ml`;
+  if (dom.waterDisplayTarget) dom.waterDisplayTarget.textContent = `/ ${target} ml`;
+  if (dom.metricWaterRatio) dom.metricWaterRatio.textContent = `${cur} / ${target} ml`;
+  if (dom.metricWaterSub) dom.metricWaterSub.textContent = `${percent}% of daily goal`;
+
+  if (dom.waterProgressCircle) {
+    const circumference = 339.29;
+    const offset = circumference - (circumference * percent) / 100;
+    dom.waterProgressCircle.style.strokeDashoffset = `${offset}`;
+  }
+
+  // Medications List
+  if (dom.medicationsListContainer) {
+    const meds = state.medications || [];
+    if (meds.length === 0) {
+      dom.medicationsListContainer.innerHTML = `<div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">No medications configured.</div>`;
+    } else {
+      dom.medicationsListContainer.innerHTML = meds.map((m) => {
+        const isTaken = m.takenToday;
+        return `
+          <div class="med-card ${isTaken ? 'taken' : ''}" data-id="${m.id}">
+            <div>
+              <div class="med-name">${m.name}</div>
+              <div class="med-meta">
+                <span>${m.dosage}</span>
+                <span>&bull;</span>
+                <span style="text-transform: capitalize;">${m.timeSlot}</span>
+                ${m.lastTakenAt ? `<span>&bull; Taken</span>` : ''}
+              </div>
+            </div>
+            <button class="btn-take-med btn-toggle-med" data-id="${m.id}">
+              ${isTaken ? '✓ Taken' : 'Mark Taken'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// 3. Render Anchor & Today View
 function renderAnchorAndToday(state) {
   const habits = state.habits || [];
   const todayStr = getTodayDateString();
-  const completedCount = habits.filter(h => h.completedDates && h.completedDates.includes(todayStr)).length;
+  const completedCount = habits.filter((h) => h.completedDates && h.completedDates.includes(todayStr)).length;
 
-  if (dom.metricHabitsRatio) {
-    dom.metricHabitsRatio.textContent = `${completedCount} / ${habits.length}`;
-  }
   if (dom.sidebarHabitBadge) {
     dom.sidebarHabitBadge.textContent = `${completedCount}/${habits.length}`;
   }
 
-  // Safe to Spend Metric
   const safeSpend = store.getSafeToSpendToday ? store.getSafeToSpendToday() : 34.50;
   if (dom.metricSafeSpend) dom.metricSafeSpend.textContent = formatCurrency(safeSpend);
   if (dom.sidebarSafeBadge) dom.sidebarSafeBadge.textContent = formatCurrency(safeSpend);
 
-  // Spent Today
   const txs = state.cashTransactions || [];
   const spentToday = txs
-    .filter(t => t.date === todayStr && t.type === 'expense')
+    .filter((t) => t.date === todayStr && t.type === 'expense')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   const cap = state.profile?.dailyBudgetCap ?? 50;
   if (dom.metricSpentToday) {
@@ -482,7 +904,7 @@ function renderAnchorAndToday(state) {
 
   // Next Alarm
   const alarms = state.alarms || [];
-  const enabledAlarms = alarms.filter(a => a.enabled);
+  const enabledAlarms = alarms.filter((a) => a.enabled);
   if (enabledAlarms.length > 0) {
     const nextA = enabledAlarms[0];
     if (dom.metricNextAlarm) dom.metricNextAlarm.textContent = formatTimeString(nextA.time, state.profile?.timeFormat);
@@ -492,11 +914,11 @@ function renderAnchorAndToday(state) {
     if (dom.metricNextAlarmLabel) dom.metricNextAlarmLabel.textContent = 'No alarms active';
   }
 
-  // Debt Net Balance
+  // Net Debt Balance
   const debts = state.debts || [];
   let totalLent = 0;
   let totalBorrowed = 0;
-  debts.forEach(d => {
+  debts.forEach((d) => {
     const isLent = d.type === 'they_owe_me' || d.direction === 'lent';
     const rem = Number(d.remaining ?? d.amount ?? 0);
     if (isLent) totalLent += rem;
@@ -511,8 +933,8 @@ function renderAnchorAndToday(state) {
   // Routine Stream
   if (dom.todayRoutineStream) {
     const routines = state.routines || [];
-    dom.todayRoutineStream.innerHTML = routines.map(r => {
-      const stepsHtml = (r.steps || []).map(s => `<li>${s.title}</li>`).join('');
+    dom.todayRoutineStream.innerHTML = routines.map((r) => {
+      const stepsHtml = (r.steps || []).map((s) => `<li>${s.title}</li>`).join('');
       return `
         <div class="timeline-item" data-id="${r.id}">
           <div class="timeline-dot">${r.icon || '⏰'}</div>
@@ -531,14 +953,14 @@ function renderAnchorAndToday(state) {
   }
 }
 
-// 2. Render Finance & Cash View
-function renderFinance(state) {
+// 4. Render Finance, Subscriptions & Pure SVG Donut Chart
+function renderFinanceAndSubscriptions(state) {
   const cap = state.profile?.dailyBudgetCap ?? 50;
   const todayStr = getTodayDateString();
   const txs = state.cashTransactions || [];
 
   const spentToday = txs
-    .filter(t => t.date === todayStr && t.type === 'expense')
+    .filter((t) => t.date === todayStr && t.type === 'expense')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const safeLeft = Math.max(0, cap - spentToday);
@@ -554,18 +976,59 @@ function renderFinance(state) {
       (percentUsed > 100 ? 'fill-rose' : percentUsed > 80 ? 'fill-amber' : 'fill-sage');
   }
 
+  // End-of-Month Buffer Gauge
+  const bufferCalc = store.getEndMonthCashBuffer ? store.getEndMonthCashBuffer() : { projectedBuffer: 185, status: 'comfort' };
+  if (dom.bufferForecastVal) {
+    const prefix = bufferCalc.projectedBuffer >= 0 ? '+' : '-';
+    dom.bufferForecastVal.textContent = `${prefix}${formatCurrency(Math.abs(bufferCalc.projectedBuffer))}`;
+    dom.bufferForecastVal.className = bufferCalc.status === 'comfort' ? 'gauge-status-comfort' : bufferCalc.status === 'tight' ? 'gauge-status-tight' : 'gauge-status-deficit';
+  }
+  if (dom.bufferForecastDesc) {
+    dom.bufferForecastDesc.textContent = bufferCalc.status === 'comfort'
+      ? 'Comfort Zone: At current daily burn rate, you will close the month with a surplus.'
+      : bufferCalc.status === 'tight'
+      ? 'Tight Margin: Buffer is near zero. Watch non-essential purchases this week.'
+      : 'Deficit Warning: Current trajectory exceeds monthly pool. Consider lowering daily cap.';
+  }
+
+  // Subscriptions List
+  if (dom.subscriptionsListGrid) {
+    const subs = state.subscriptions || [];
+    if (subs.length === 0) {
+      dom.subscriptionsListGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 16px; color: var(--text-muted); font-size: 13px;">No subscriptions configured.</div>`;
+    } else {
+      dom.subscriptionsListGrid.innerHTML = subs.map((s) => {
+        return `
+          <div class="sub-card" data-id="${s.id}">
+            <div>
+              <strong style="color: var(--text-primary); font-size: 14px;">${s.name}</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">Renews on ${s.billingDay}th &bull; ${s.category}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-mono); font-weight: 700;">${formatCurrency(s.amount)}</div>
+              ${!s.isPaidThisMonth ? `<button class="btn-primary btn-pay-sub" data-id="${s.id}" data-amt="${s.amount}" data-name="${s.name}" style="padding: 3px 8px; font-size: 11px; margin-top: 4px;">Log Paid</button>` : `<span style="font-size: 11px; color: var(--accent-sage);">Paid ✓</span>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Pure SVG Expense Donut & Legend
+  renderExpenseDonut(txs);
+
   // Transactions list
   if (dom.transactionsList) {
     let filtered = [...txs];
-    if (currentTxFilter === 'expense') filtered = filtered.filter(t => t.type === 'expense');
-    if (currentTxFilter === 'income') filtered = filtered.filter(t => t.type === 'income');
+    if (currentTxFilter === 'expense') filtered = filtered.filter((t) => t.type === 'expense');
+    if (currentTxFilter === 'income') filtered = filtered.filter((t) => t.type === 'income');
 
     filtered.sort((a, b) => (b.timestamp || b.date).localeCompare(a.timestamp || a.date));
 
     if (filtered.length === 0) {
       dom.transactionsList.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted);">No transactions logged yet.</div>`;
     } else {
-      dom.transactionsList.innerHTML = filtered.map(t => {
+      dom.transactionsList.innerHTML = filtered.map((t) => {
         const isExpense = t.type === 'expense';
         const sign = isExpense ? '-' : '+';
         const amtClass = isExpense ? 'amount-expense' : 'amount-income';
@@ -591,13 +1054,84 @@ function renderFinance(state) {
   }
 }
 
-// 3. Render Debt View
+// Pure SVG Expense Donut Renderer
+function renderExpenseDonut(txs) {
+  if (!dom.svgCategoryDonut || !dom.categoryLegendList) return;
+
+  const categories = {};
+  let totalExpense = 0;
+
+  txs.filter((t) => t.type === 'expense').forEach((t) => {
+    const cat = t.category || 'Misc';
+    const amt = Number(t.amount || 0);
+    categories[cat] = (categories[cat] || 0) + amt;
+    totalExpense += amt;
+  });
+
+  const catColors = {
+    Food: '#3fb950',
+    Coffee: '#58a6ff',
+    Groceries: '#f0883e',
+    Transit: '#bc8cff',
+    Bills: '#f85149',
+    Health: '#39d353',
+    Misc: '#9aa5b5'
+  };
+
+  const entries = Object.entries(categories);
+  if (entries.length === 0 || totalExpense === 0) {
+    dom.svgCategoryDonut.innerHTML = `<circle cx="80" cy="80" r="50" fill="none" stroke="var(--border-subtle)" stroke-width="20" /><text x="80" y="85" text-anchor="middle" fill="var(--text-muted)" font-size="12">No data</text>`;
+    dom.categoryLegendList.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;">Log expenses to see category breakdown.</div>`;
+    return;
+  }
+
+  // Build SVG segments
+  const circumference = 2 * Math.PI * 50; // r = 50 -> ~314.159
+  let accumulatedOffset = 0;
+  let circlesHtml = `<circle cx="80" cy="80" r="50" fill="none" stroke="var(--bg-canvas)" stroke-width="20" />`;
+  let legendHtml = '';
+
+  entries.forEach(([cat, amt]) => {
+    const pct = amt / totalExpense;
+    const strokeDash = pct * circumference;
+    const color = catColors[cat] || '#8b949e';
+
+    circlesHtml += `
+      <circle cx="80" cy="80" r="50" fill="none" stroke="${color}" stroke-width="20"
+        stroke-dasharray="${strokeDash} ${circumference}"
+        stroke-dashoffset="${-accumulatedOffset}"
+        transform="rotate(-90 80 80)"
+      />
+    `;
+    accumulatedOffset += strokeDash;
+
+    legendHtml += `
+      <div class="chart-legend-item">
+        <div>
+          <span class="chart-legend-color" style="background-color: ${color};"></span>
+          <span>${cat}</span>
+        </div>
+        <div>
+          <strong>${formatCurrency(amt)}</strong>
+          <span style="color: var(--text-muted); font-size: 11px;">(${Math.round(pct * 100)}%)</span>
+        </div>
+      </div>
+    `;
+  });
+
+  circlesHtml += `<text x="80" y="85" text-anchor="middle" fill="var(--text-primary)" font-family="var(--font-mono)" font-size="14" font-weight="700">${formatCurrency(totalExpense)}</text>`;
+
+  dom.svgCategoryDonut.innerHTML = circlesHtml;
+  dom.categoryLegendList.innerHTML = legendHtml;
+}
+
+// 5. Render Debt View
 function renderDebt(state) {
   const debts = state.debts || [];
   let totalLent = 0;
   let totalBorrowed = 0;
 
-  debts.forEach(d => {
+  debts.forEach((d) => {
     const isLent = d.type === 'they_owe_me' || d.direction === 'lent';
     const rem = Number(d.remaining ?? d.amount ?? 0);
     if (isLent) totalLent += rem;
@@ -611,8 +1145,7 @@ function renderDebt(state) {
   if (dom.summaryTotalBorrowed) dom.summaryTotalBorrowed.textContent = formatCurrency(totalBorrowed);
   if (dom.summaryNetDebt) dom.summaryNetDebt.textContent = `${netPrefix}${formatCurrency(Math.abs(net))}`;
 
-  // Filter by active tab
-  const filtered = debts.filter(d => {
+  const filtered = debts.filter((d) => {
     const isLent = d.type === 'they_owe_me' || d.direction === 'lent';
     return currentDebtTab === 'they_owe_me' ? isLent : !isLent;
   });
@@ -621,7 +1154,7 @@ function renderDebt(state) {
     if (filtered.length === 0) {
       dom.debtCardsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 32px; color: var(--text-muted);">No records in this ledger.</div>`;
     } else {
-      dom.debtCardsGrid.innerHTML = filtered.map(d => {
+      dom.debtCardsGrid.innerHTML = filtered.map((d) => {
         const rem = Number(d.remaining ?? d.amount ?? 0);
         const status = rem <= 0 ? 'settled' : rem < d.amount ? 'partial' : 'unpaid';
         const badgeClass = status === 'settled' ? 'badge-settled' : status === 'partial' ? 'badge-partial' : 'badge-unpaid';
@@ -653,16 +1186,43 @@ function renderDebt(state) {
   }
 }
 
-// 4. Render Habits & Alarms View
-function renderHabitsAndAlarms(state) {
+// 6. Render Habits, Heatmap & Alarms
+function renderHabitsAndHeatmap(state) {
   const habits = state.habits || [];
   const todayStr = getTodayDateString();
 
+  // Weekly Heatmap (7 Days)
+  if (dom.weeklyHeatmapContainer) {
+    const days = [6, 5, 4, 3, 2, 1, 0].map((offset) => getLocalDateString(-offset));
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    dom.weeklyHeatmapContainer.innerHTML = habits.map((h) => {
+      const cellsHtml = days.map((day) => {
+        const isDone = h.completedDates && h.completedDates.includes(day);
+        const dayIdx = new Date(day).getDay();
+        return `
+          <div class="heatmap-cell ${isDone ? 'done' : ''}" title="${day}: ${isDone ? 'Completed' : 'Rest'}">
+            ${dayLabels[dayIdx][0]}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="heatmap-row">
+          <div class="heatmap-label" title="${h.title}">${h.icon || '✨'} ${h.title}</div>
+          <div class="heatmap-cells">${cellsHtml}</div>
+          <span style="font-size: 11px; color: var(--accent-amber); font-weight: 600; margin-left: 6px;">🔥 ${h.streak}d</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Habits Cards Grid
   if (dom.habitsListGrid) {
     if (habits.length === 0) {
       dom.habitsListGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 24px; color: var(--text-muted);">No habits added yet.</div>`;
     } else {
-      dom.habitsListGrid.innerHTML = habits.map(h => {
+      dom.habitsListGrid.innerHTML = habits.map((h) => {
         const isCompleted = h.completedDates && h.completedDates.includes(todayStr);
         const streak = h.streak || 0;
 
@@ -692,7 +1252,7 @@ function renderHabitsAndAlarms(state) {
     if (alarms.length === 0) {
       dom.alarmsListContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted);">No alarms configured.</div>`;
     } else {
-      dom.alarmsListContainer.innerHTML = alarms.map(a => {
+      dom.alarmsListContainer.innerHTML = alarms.map((a) => {
         return `
           <div class="alarm-card ${a.enabled ? '' : 'disabled'}" data-id="${a.id}">
             <div>
@@ -718,19 +1278,19 @@ function renderHabitsAndAlarms(state) {
   }
 }
 
-// 5. Render Scratchpad / Brain Dump View
+// 7. Render Scratchpad
 function renderScratchpad(state) {
   const notes = state.scratchpad || [];
   let filtered = [...notes];
   if (currentScratchTag !== 'All') {
-    filtered = filtered.filter(n => (n.tag || n.category) === currentScratchTag);
+    filtered = filtered.filter((n) => (n.tag || n.category) === currentScratchTag);
   }
 
   if (dom.scratchpadNotesGrid) {
     if (filtered.length === 0) {
       dom.scratchpadNotesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 32px; color: var(--text-muted);">No notes in this category. Write anything above!</div>`;
     } else {
-      dom.scratchpadNotesGrid.innerHTML = filtered.map(n => {
+      dom.scratchpadNotesGrid.innerHTML = filtered.map((n) => {
         const text = n.text || n.content || '';
         const tag = n.tag || n.category || 'Note';
 
@@ -752,21 +1312,43 @@ function renderScratchpad(state) {
   }
 }
 
-// 6. Render Settings View
-function renderSettings(state) {
+// 8. Render Settings & Snapshots
+function renderSettingsAndSnapshots(state) {
   const p = state.profile || {};
   if (dom.prefCurrency) dom.prefCurrency.value = p.currency || '$';
   if (dom.prefTimeFormat) dom.prefTimeFormat.value = p.timeFormat || '12h';
   if (dom.prefBudgetCap) dom.prefBudgetCap.value = p.dailyBudgetCap || 50;
+  if (dom.prefWaterGoal && state.hydration) dom.prefWaterGoal.value = state.hydration.targetMl || 2000;
   if (dom.prefSoundPreset) dom.prefSoundPreset.value = p.soundPreset || 'zen-bowl';
+
+  // Snapshots list
+  if (dom.snapshotsListContainer) {
+    const snaps = state.snapshots || [];
+    if (snaps.length === 0) {
+      dom.snapshotsListContainer.innerHTML = `<div style="text-align: center; padding: 16px; color: var(--text-muted); font-size: 13px;">No checkpoints created yet. Click "+ Save Checkpoint" above!</div>`;
+    } else {
+      dom.snapshotsListContainer.innerHTML = snaps.map((s) => {
+        const timeFormatted = new Date(s.timestamp).toLocaleString();
+        return `
+          <div class="snapshot-item" data-id="${s.id}">
+            <div>
+              <strong style="color: var(--text-primary); font-size: 14px;">${s.label || 'Automated Checkpoint'}</strong>
+              <div style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">${timeFormatted}</div>
+            </div>
+            <button class="btn-secondary btn-restore-snapshot" data-id="${s.id}" style="padding: 6px 12px; font-size: 12px;">Restore Checkpoint</button>
+          </div>
+        `;
+      }).join('');
+    }
+  }
 }
 
 // ==========================================================================
-// EVENT LISTENERS & CRUD OPERATIONS
+// EVENT LISTENERS & CRUD OPERATIONS (v2.0 PRO MAX)
 // ==========================================================================
 function setupEventListeners() {
   // Navigation: Desktop Sidebar
-  dom.sidebarNavItems.forEach(item => {
+  dom.sidebarNavItems.forEach((item) => {
     item.addEventListener('click', () => {
       switchView(item.dataset.view);
       soundEngine.playPreset('micro-tick');
@@ -774,12 +1356,28 @@ function setupEventListeners() {
   });
 
   // Navigation: Mobile Bottom Dock
-  dom.mobileDockBtns.forEach(btn => {
+  dom.mobileDockBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       switchView(btn.dataset.view);
       soundEngine.playPreset('micro-tick');
     });
   });
+
+  // Energy Battery Gauge Click Cycle: 100% -> 60% -> 20% -> 100%
+  if (dom.headerBatteryPill) {
+    dom.headerBatteryPill.addEventListener('click', () => {
+      const curLvl = store.getState().energyBattery?.level ?? 80;
+      const nextLvl = curLvl > 60 ? 60 : curLvl > 20 ? 20 : 100;
+      store.setEnergyLevel(nextLvl);
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.btnExitGentle) {
+    dom.btnExitGentle.addEventListener('click', () => {
+      store.toggleGentleMode(false);
+      soundEngine.playPreset('micro-tick');
+    });
+  }
 
   // Focus Mode Toggle
   if (dom.btnFocusToggle) {
@@ -790,37 +1388,140 @@ function setupEventListeners() {
   }
 
   // Grounding Engine
-  if (dom.btnSidebarGrounding) {
-    dom.btnSidebarGrounding.addEventListener('click', openGroundingModal);
-  }
-  if (dom.btnHeaderGrounding) {
-    dom.btnHeaderGrounding.addEventListener('click', openGroundingModal);
-  }
-  if (dom.btnCloseGrounding) {
-    dom.btnCloseGrounding.addEventListener('click', closeGroundingModal);
-  }
-  if (dom.btnGroundBreather) {
-    dom.btnGroundBreather.addEventListener('click', () => applyGroundingAction('breather'));
-  }
-  if (dom.btnGroundCatchup) {
-    dom.btnGroundCatchup.addEventListener('click', () => applyGroundingAction('catchup'));
-  }
-  if (dom.btnGroundRest) {
-    dom.btnGroundRest.addEventListener('click', () => applyGroundingAction('rest'));
-  }
+  if (dom.btnSidebarGrounding) dom.btnSidebarGrounding.addEventListener('click', openGroundingModal);
+  if (dom.btnHeaderGrounding) dom.btnHeaderGrounding.addEventListener('click', openGroundingModal);
+  if (dom.btnCloseGrounding) dom.btnCloseGrounding.addEventListener('click', closeGroundingModal);
+  if (dom.btnGroundBreather) dom.btnGroundBreather.addEventListener('click', () => applyGroundingAction('breather'));
+  if (dom.btnGroundCatchup) dom.btnGroundCatchup.addEventListener('click', () => applyGroundingAction('catchup'));
+  if (dom.btnGroundRest) dom.btnGroundRest.addEventListener('click', () => applyGroundingAction('rest'));
 
   // Alarm Ringing Modal
-  if (dom.btnDismissAlarm) {
-    dom.btnDismissAlarm.addEventListener('click', dismissRingingAlarm);
+  if (dom.btnDismissAlarm) dom.btnDismissAlarm.addEventListener('click', dismissRingingAlarm);
+  if (dom.btnSnooze5) dom.btnSnooze5.addEventListener('click', () => snoozeAlarm(5));
+  if (dom.btnSnooze10) dom.btnSnooze10.addEventListener('click', () => snoozeAlarm(10));
+  if (dom.btnSnooze15) dom.btnSnooze15.addEventListener('click', () => snoozeAlarm(15));
+
+  // Focus Sprint & Ambient Soundscapes
+  if (dom.btnOpenSprint) dom.btnOpenSprint.addEventListener('click', openFocusSprintModal);
+  if (dom.btnCloseSprint) dom.btnCloseSprint.addEventListener('click', closeFocusSprintModal);
+  if (dom.btnSprintToggle) dom.btnSprintToggle.addEventListener('click', toggleSprintTimer);
+  if (dom.btnSprintReset) dom.btnSprintReset.addEventListener('click', resetSprintTimer);
+  if (dom.btnSprint15) dom.btnSprint15.addEventListener('click', () => setSprintMode(15));
+  if (dom.btnSprint25) dom.btnSprint25.addEventListener('click', () => setSprintMode(25));
+  if (dom.btnSprint50) dom.btnSprint50.addEventListener('click', () => setSprintMode(50));
+
+  if (dom.chipPinkRain) dom.chipPinkRain.addEventListener('click', () => setSoundscape('pink-rain'));
+  if (dom.chipAlphaWaves) dom.chipAlphaWaves.addEventListener('click', () => setSoundscape('alpha-waves'));
+  if (dom.chipTibetanDrone) dom.chipTibetanDrone.addEventListener('click', () => setSoundscape('tibetan-drone'));
+  if (dom.chipMuteSoundscape) dom.chipMuteSoundscape.addEventListener('click', () => setSoundscape('mute'));
+
+  // Global Omnibar Command Palette
+  if (dom.btnOpenOmnibar) dom.btnOpenOmnibar.addEventListener('click', openOmnibar);
+  if (dom.btnCloseOmnibar) dom.btnCloseOmnibar.addEventListener('click', closeOmnibar);
+  if (dom.omnibarSearchInput) {
+    dom.omnibarSearchInput.addEventListener('input', (e) => {
+      renderOmnibarResults(e.target.value);
+    });
+    dom.omnibarSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const firstAction = dom.omnibarResultsList.querySelector('.omnibar-item');
+        if (firstAction) firstAction.click();
+      }
+    });
   }
-  if (dom.btnSnooze5) {
-    dom.btnSnooze5.addEventListener('click', () => snoozeAlarm(5));
+
+  // Hydration Controls
+  if (dom.btnWater250) {
+    dom.btnWater250.addEventListener('click', () => {
+      store.addWater(250);
+      soundEngine.playPreset('water-drop');
+    });
   }
-  if (dom.btnSnooze10) {
-    dom.btnSnooze10.addEventListener('click', () => snoozeAlarm(10));
+  if (dom.btnWater500) {
+    dom.btnWater500.addEventListener('click', () => {
+      store.addWater(500);
+      soundEngine.playPreset('water-drop');
+    });
   }
-  if (dom.btnSnooze15) {
-    dom.btnSnooze15.addEventListener('click', () => snoozeAlarm(15));
+  if (dom.btnWater750) {
+    dom.btnWater750.addEventListener('click', () => {
+      store.addWater(750);
+      soundEngine.playPreset('water-drop');
+    });
+  }
+  if (dom.btnWaterUndo) {
+    dom.btnWaterUndo.addEventListener('click', () => {
+      store.undoWater();
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+
+  // Medications Toggle & Modal
+  if (dom.medicationsListContainer) {
+    dom.medicationsListContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-toggle-med');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      store.toggleMedication(id);
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.btnOpenAddMed) dom.btnOpenAddMed.addEventListener('click', () => dom.modalMedication.classList.add('open'));
+  if (dom.btnCloseMed) dom.btnCloseMed.addEventListener('click', () => dom.modalMedication.classList.remove('open'));
+  if (dom.btnCancelMed) dom.btnCancelMed.addEventListener('click', () => dom.modalMedication.classList.remove('open'));
+  if (dom.formMedication) {
+    dom.formMedication.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newMed = {
+        name: dom.medName.value.trim(),
+        dosage: dom.medDosage.value.trim(),
+        timeSlot: dom.medTimeslot.value,
+        takenToday: false,
+        lastTakenAt: null
+      };
+      store.addItem('medications', newMed);
+      dom.formMedication.reset();
+      dom.modalMedication.classList.remove('open');
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+
+  // Schedule Quick-Shift Bar
+  if (dom.btnShift15) {
+    dom.btnShift15.addEventListener('click', () => {
+      store.quickShiftSchedule(15);
+      soundEngine.playPreset('micro-tick');
+      showShiftUndoToast('Schedule shifted +15 minutes.');
+    });
+  }
+  if (dom.btnShift30) {
+    dom.btnShift30.addEventListener('click', () => {
+      store.quickShiftSchedule(30);
+      soundEngine.playPreset('micro-tick');
+      showShiftUndoToast('Schedule shifted +30 minutes.');
+    });
+  }
+  if (dom.btnShift60) {
+    dom.btnShift60.addEventListener('click', () => {
+      store.quickShiftSchedule(60);
+      soundEngine.playPreset('micro-tick');
+      showShiftUndoToast('Schedule shifted +1 hour.');
+    });
+  }
+  if (dom.btnSnapNow) {
+    dom.btnSnapNow.addEventListener('click', () => {
+      store.quickShiftSchedule(0);
+      soundEngine.playPreset('micro-tick');
+      alert('⚡ Schedule snapped to current hour.');
+    });
+  }
+  if (dom.btnUndoShift) {
+    dom.btnUndoShift.addEventListener('click', () => {
+      store.undoQuickShift();
+      dom.shiftToastUndo.classList.remove('show');
+      soundEngine.playPreset('micro-tick');
+      alert('↶ Schedule shift undone.');
+    });
   }
 
   // Anchor Done Immediate Step
@@ -856,36 +1557,15 @@ function setupEventListeners() {
     });
   }
 
-  // Cash: Transaction Filters
-  if (dom.filterTxAll) {
-    dom.filterTxAll.addEventListener('click', () => {
-      currentTxFilter = 'all';
-      renderFinance(store.getState());
-    });
-  }
-  if (dom.filterTxExpense) {
-    dom.filterTxExpense.addEventListener('click', () => {
-      currentTxFilter = 'expense';
-      renderFinance(store.getState());
-    });
-  }
-  if (dom.filterTxIncome) {
-    dom.filterTxIncome.addEventListener('click', () => {
-      currentTxFilter = 'income';
-      renderFinance(store.getState());
-    });
-  }
+  // Cash: Filters
+  if (dom.filterTxAll) dom.filterTxAll.addEventListener('click', () => { currentTxFilter = 'all'; renderFinanceAndSubscriptions(store.getState()); });
+  if (dom.filterTxExpense) dom.filterTxExpense.addEventListener('click', () => { currentTxFilter = 'expense'; renderFinanceAndSubscriptions(store.getState()); });
+  if (dom.filterTxIncome) dom.filterTxIncome.addEventListener('click', () => { currentTxFilter = 'income'; renderFinanceAndSubscriptions(store.getState()); });
 
   // Cash: Add Transaction Modal & Form
-  if (dom.btnOpenAddTx) {
-    dom.btnOpenAddTx.addEventListener('click', () => dom.modalTransaction.classList.add('open'));
-  }
-  if (dom.btnCloseTx) {
-    dom.btnCloseTx.addEventListener('click', () => dom.modalTransaction.classList.remove('open'));
-  }
-  if (dom.btnCancelTx) {
-    dom.btnCancelTx.addEventListener('click', () => dom.modalTransaction.classList.remove('open'));
-  }
+  if (dom.btnOpenAddTx) dom.btnOpenAddTx.addEventListener('click', () => dom.modalTransaction.classList.add('open'));
+  if (dom.btnCloseTx) dom.btnCloseTx.addEventListener('click', () => dom.modalTransaction.classList.remove('open'));
+  if (dom.btnCancelTx) dom.btnCancelTx.addEventListener('click', () => dom.modalTransaction.classList.remove('open'));
   if (dom.formTransaction) {
     dom.formTransaction.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -925,7 +1605,53 @@ function setupEventListeners() {
     });
   }
 
-  // Debt: Tabs
+  // Subscriptions Modal & Log Paid
+  if (dom.btnOpenAddSub) dom.btnOpenAddSub.addEventListener('click', () => dom.modalSubscription.classList.add('open'));
+  if (dom.btnCloseSub) dom.btnCloseSub.addEventListener('click', () => dom.modalSubscription.classList.remove('open'));
+  if (dom.btnCancelSub) dom.btnCancelSub.addEventListener('click', () => dom.modalSubscription.classList.remove('open'));
+  if (dom.formSubscription) {
+    dom.formSubscription.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newSub = {
+        name: dom.subName.value.trim(),
+        amount: parseFloat(dom.subAmount.value),
+        billingDay: parseInt(dom.subBillingDay.value, 10),
+        category: dom.subCategory.value,
+        cycle: 'monthly',
+        isPaidThisMonth: false
+      };
+      store.addItem('subscriptions', newSub);
+      dom.formSubscription.reset();
+      dom.modalSubscription.classList.remove('open');
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.subscriptionsListGrid) {
+    dom.subscriptionsListGrid.addEventListener('click', (e) => {
+      const payBtn = e.target.closest('.btn-pay-sub');
+      if (!payBtn) return;
+      const id = payBtn.dataset.id;
+      const amt = parseFloat(payBtn.dataset.amt);
+      const name = payBtn.dataset.name;
+
+      // Add expense to cash ledger
+      store.addItem('cashTransactions', {
+        date: getTodayDateString(),
+        time: new Date().toTimeString().slice(0, 5),
+        timestamp: new Date().toISOString(),
+        type: 'expense',
+        amount: amt,
+        category: 'Bills',
+        note: `Subscription: ${name}`
+      });
+
+      // Mark subscription as paid
+      store.updateItem('subscriptions', id, { isPaidThisMonth: true });
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+
+  // Debt Tabs
   if (dom.tabDebtLent) {
     dom.tabDebtLent.addEventListener('click', () => {
       currentDebtTab = 'they_owe_me';
@@ -943,16 +1669,10 @@ function setupEventListeners() {
     });
   }
 
-  // Debt: Add Modal & Form
-  if (dom.btnOpenAddDebt) {
-    dom.btnOpenAddDebt.addEventListener('click', () => dom.modalDebt.classList.add('open'));
-  }
-  if (dom.btnCloseDebt) {
-    dom.btnCloseDebt.addEventListener('click', () => dom.modalDebt.classList.remove('open'));
-  }
-  if (dom.btnCancelDebt) {
-    dom.btnCancelDebt.addEventListener('click', () => dom.modalDebt.classList.remove('open'));
-  }
+  // Debt: Add Modal
+  if (dom.btnOpenAddDebt) dom.btnOpenAddDebt.addEventListener('click', () => dom.modalDebt.classList.add('open'));
+  if (dom.btnCloseDebt) dom.btnCloseDebt.addEventListener('click', () => dom.modalDebt.classList.remove('open'));
+  if (dom.btnCancelDebt) dom.btnCancelDebt.addEventListener('click', () => dom.modalDebt.classList.remove('open'));
   if (dom.formDebt) {
     dom.formDebt.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -983,7 +1703,7 @@ function setupEventListeners() {
     });
   }
 
-  // Debt: Settle / Pay Actions
+  // Debt: Settle & Delete
   if (dom.debtCardsGrid) {
     dom.debtCardsGrid.addEventListener('click', (e) => {
       const settleBtn = e.target.closest('.btn-settle-debt');
@@ -1018,7 +1738,7 @@ function setupEventListeners() {
       const id = dom.settleDebtId.value;
       const payAmt = parseFloat(dom.settleAmount.value);
       const state = store.getState();
-      const item = (state.debts || []).find(d => d.id === id);
+      const item = (state.debts || []).find((d) => d.id === id);
 
       if (item) {
         const curRem = Number(item.remaining ?? item.amount ?? 0);
@@ -1035,14 +1755,10 @@ function setupEventListeners() {
       soundEngine.playPreset('micro-tick');
     });
   }
-  if (dom.btnCloseSettle) {
-    dom.btnCloseSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
-  }
-  if (dom.btnCancelSettle) {
-    dom.btnCancelSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
-  }
+  if (dom.btnCloseSettle) dom.btnCloseSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
+  if (dom.btnCancelSettle) dom.btnCancelSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
 
-  // Habits: Check Toggle
+  // Habits Check Toggle
   if (dom.habitsListGrid) {
     dom.habitsListGrid.addEventListener('click', (e) => {
       const checkBtn = e.target.closest('.btn-check-habit');
@@ -1050,14 +1766,14 @@ function setupEventListeners() {
       const id = checkBtn.dataset.id;
       const todayStr = getTodayDateString();
       const state = store.getState();
-      const habit = (state.habits || []).find(h => h.id === id);
+      const habit = (state.habits || []).find((h) => h.id === id);
 
       if (habit) {
         let dates = habit.completedDates ? [...habit.completedDates] : [];
         let streak = habit.streak || 0;
 
         if (dates.includes(todayStr)) {
-          dates = dates.filter(d => d !== todayStr);
+          dates = dates.filter((d) => d !== todayStr);
           streak = Math.max(0, streak - 1);
         } else {
           dates.push(todayStr);
@@ -1073,16 +1789,10 @@ function setupEventListeners() {
     });
   }
 
-  // Habits: Add Modal & Form
-  if (dom.btnOpenAddHabit) {
-    dom.btnOpenAddHabit.addEventListener('click', () => dom.modalHabit.classList.add('open'));
-  }
-  if (dom.btnCloseHabit) {
-    dom.btnCloseHabit.addEventListener('click', () => dom.modalHabit.classList.remove('open'));
-  }
-  if (dom.btnCancelHabit) {
-    dom.btnCancelHabit.addEventListener('click', () => dom.modalHabit.classList.remove('open'));
-  }
+  // Habits Add Modal
+  if (dom.btnOpenAddHabit) dom.btnOpenAddHabit.addEventListener('click', () => dom.modalHabit.classList.add('open'));
+  if (dom.btnCloseHabit) dom.btnCloseHabit.addEventListener('click', () => dom.modalHabit.classList.remove('open'));
+  if (dom.btnCancelHabit) dom.btnCancelHabit.addEventListener('click', () => dom.modalHabit.classList.remove('open'));
   if (dom.formHabit) {
     dom.formHabit.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1109,16 +1819,10 @@ function setupEventListeners() {
     });
   }
 
-  // Alarms: Add Modal & Form
-  if (dom.btnOpenAddAlarm) {
-    dom.btnOpenAddAlarm.addEventListener('click', () => dom.modalAlarm.classList.add('open'));
-  }
-  if (dom.btnCloseAlarm) {
-    dom.btnCloseAlarm.addEventListener('click', () => dom.modalAlarm.classList.remove('open'));
-  }
-  if (dom.btnCancelAlarm) {
-    dom.btnCancelAlarm.addEventListener('click', () => dom.modalAlarm.classList.remove('open'));
-  }
+  // Alarms Modal & Toggle
+  if (dom.btnOpenAddAlarm) dom.btnOpenAddAlarm.addEventListener('click', () => dom.modalAlarm.classList.add('open'));
+  if (dom.btnCloseAlarm) dom.btnCloseAlarm.addEventListener('click', () => dom.modalAlarm.classList.remove('open'));
+  if (dom.btnCancelAlarm) dom.btnCancelAlarm.addEventListener('click', () => dom.modalAlarm.classList.remove('open'));
   if (dom.formAlarm) {
     dom.formAlarm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1143,7 +1847,6 @@ function setupEventListeners() {
     });
   }
 
-  // Alarms: Toggle, Test, Delete
   if (dom.alarmsListContainer) {
     dom.alarmsListContainer.addEventListener('change', (e) => {
       const toggle = e.target.closest('.alarm-toggle');
@@ -1172,7 +1875,7 @@ function setupEventListeners() {
     });
   }
 
-  // Scratchpad: Save Note
+  // Scratchpad
   if (dom.btnSaveScratchpad) {
     dom.btnSaveScratchpad.addEventListener('click', () => {
       const text = dom.scratchpadInput.value.trim();
@@ -1194,19 +1897,17 @@ function setupEventListeners() {
     });
   }
 
-  // Scratchpad: Tag Filter
   if (dom.scratchTagFilters) {
     dom.scratchTagFilters.addEventListener('click', (e) => {
       const btn = e.target.closest('.tag-filter-pill');
       if (!btn) return;
-      dom.scratchTagFilters.querySelectorAll('.tag-filter-pill').forEach(b => b.classList.remove('active'));
+      dom.scratchTagFilters.querySelectorAll('.tag-filter-pill').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       currentScratchTag = btn.dataset.tag;
       renderScratchpad(store.getState());
     });
   }
 
-  // Scratchpad: 1-Click Convert Actions
   if (dom.scratchpadNotesGrid) {
     dom.scratchpadNotesGrid.addEventListener('click', (e) => {
       const delBtn = e.target.closest('.btn-delete-note');
@@ -1244,7 +1945,6 @@ function setupEventListeners() {
     });
   }
 
-  // Header Quick Note Button
   if (dom.btnQuickNote) {
     dom.btnQuickNote.addEventListener('click', () => {
       switchView('scratchpad');
@@ -1252,7 +1952,7 @@ function setupEventListeners() {
     });
   }
 
-  // Settings: Preferences Changes
+  // Preferences Changes
   if (dom.prefCurrency) {
     dom.prefCurrency.addEventListener('change', () => {
       store.updateModule('profile', { currency: dom.prefCurrency.value });
@@ -1271,6 +1971,12 @@ function setupEventListeners() {
       soundEngine.playPreset('micro-tick');
     });
   }
+  if (dom.prefWaterGoal) {
+    dom.prefWaterGoal.addEventListener('change', () => {
+      store.updateModule('hydration', { targetMl: parseInt(dom.prefWaterGoal.value, 10) || 2000 });
+      soundEngine.playPreset('micro-tick');
+    });
+  }
   if (dom.prefSoundPreset) {
     dom.prefSoundPreset.addEventListener('change', () => {
       store.updateModule('profile', { soundPreset: dom.prefSoundPreset.value });
@@ -1278,13 +1984,38 @@ function setupEventListeners() {
     });
   }
 
-  // Settings: Sound Preview Board
+  // Sound Preview Buttons
   if (dom.previewZenBowl) dom.previewZenBowl.addEventListener('click', () => soundEngine.playPreset('zen-bowl'));
   if (dom.previewTriad) dom.previewTriad.addEventListener('click', () => soundEngine.playPreset('gentle-triad'));
   if (dom.previewBell) dom.previewBell.addEventListener('click', () => soundEngine.playPreset('attentive-bell'));
   if (dom.previewTick) dom.previewTick.addEventListener('click', () => soundEngine.playPreset('micro-tick'));
+  if (dom.previewWater) dom.previewWater.addEventListener('click', () => soundEngine.playPreset('water-drop'));
+  if (dom.previewRain) dom.previewRain.addEventListener('click', () => setSoundscape('pink-rain'));
+  if (dom.previewAlpha) dom.previewAlpha.addEventListener('click', () => setSoundscape('alpha-waves'));
+  if (dom.previewDrone) dom.previewDrone.addEventListener('click', () => setSoundscape('tibetan-drone'));
 
-  // Settings: Export & Import JSON Backup
+  // Snapshots & Recovery
+  if (dom.btnCreateSnapshot) {
+    dom.btnCreateSnapshot.addEventListener('click', () => {
+      const snap = store.createAutoSnapshot('Manual User Checkpoint');
+      alert(`Checkpoint saved! (${new Date(snap.timestamp).toLocaleTimeString()})`);
+      soundEngine.playPreset('micro-tick');
+    });
+  }
+  if (dom.snapshotsListContainer) {
+    dom.snapshotsListContainer.addEventListener('click', (e) => {
+      const restBtn = e.target.closest('.btn-restore-snapshot');
+      if (!restBtn) return;
+      const id = restBtn.dataset.id;
+      if (confirm('Restore this checkpoint? Any unsaved changes made after will be rolled back.')) {
+        store.restoreAutoSnapshot(id);
+        soundEngine.playPreset('zen-bowl');
+        alert('Checkpoint restored successfully!');
+      }
+    });
+  }
+
+  // Backup & Restore
   if (dom.btnExportBackup) {
     dom.btnExportBackup.addEventListener('click', () => {
       const jsonStr = store.exportToJSON();
@@ -1340,19 +2071,42 @@ function setupEventListeners() {
           habits: [],
           alarms: [],
           routines: [],
-          scratchpad: []
+          scratchpad: [],
+          medications: [],
+          subscriptions: []
         });
         soundEngine.playPreset('micro-tick');
       }
     });
   }
 
-  // Keyboard Navigation & Shortcuts
+  // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
-    // If typing in input or textarea, don't trigger global shortcuts
+    // Omnibar Toggle: Cmd+K or Ctrl+K
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (dom.modalOmnibar.classList.contains('open')) {
+        closeOmnibar();
+      } else {
+        openOmnibar();
+      }
+      return;
+    }
+
+    // Energy Battery Quick Cycle: Key E (when not in input)
+    if (e.key === 'e' || e.key === 'E') {
+      if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        const curLvl = store.getState().energyBattery?.level ?? 80;
+        const nextLvl = curLvl > 60 ? 60 : curLvl > 20 ? 20 : 100;
+        store.setEnergyLevel(nextLvl);
+        soundEngine.playPreset('micro-tick');
+        return;
+      }
+    }
+
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.modal-backdrop.open').forEach((m) => m.classList.remove('open'));
       }
       return;
     }
@@ -1361,7 +2115,7 @@ function setupEventListeners() {
       toggleFocusMode();
     } else if (e.key === 'Escape') {
       if (isFocusMode) toggleFocusMode(false);
-      document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.modal-backdrop.open').forEach((m) => m.classList.remove('open'));
     } else if ((e.altKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
       e.preventDefault();
       switchView('scratchpad');
@@ -1371,7 +2125,7 @@ function setupEventListeners() {
 }
 
 // ==========================================================================
-// PWA SERVICE WORKER REGISTRATION
+// PWA SERVICE WORKER REGISTRATION & DAILY BASELINE SNAPSHOT
 // ==========================================================================
 function initServiceWorker() {
   if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
@@ -1383,34 +2137,36 @@ function initServiceWorker() {
   }
 }
 
+function initDailyBaselineSnapshot() {
+  const state = store.getState();
+  const snaps = state.snapshots || [];
+  const todayPrefix = getTodayDateString();
+
+  const hasTodayBaseline = snaps.some((s) => s.label.includes('Daily Baseline') && (s.timestamp || '').startsWith(todayPrefix));
+  if (!hasTodayBaseline) {
+    store.createAutoSnapshot(`Daily Baseline (${todayPrefix})`);
+  }
+}
+
 // ==========================================================================
 // APPLICATION BOOTSTRAP
 // ==========================================================================
 function init() {
-  // Subscribe UI to store mutations
   store.subscribe((newState) => {
     renderAll();
   });
 
-  // Initial UI Render
   renderAll();
-
-  // Setup Clocks, Routines & Alarms
   initClockAndRoutines();
-
-  // Setup DOM Event Listeners
   setupEventListeners();
-
-  // Initialize PWA Service Worker
   initServiceWorker();
+  initDailyBaselineSnapshot();
 
-  console.log('Daily Compass Application initialized with zero dependencies.');
+  console.log('Daily Compass v2.0 Pro Max Operating System initialized.');
 }
 
-// Start app once DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
-
