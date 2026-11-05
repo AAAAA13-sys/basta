@@ -423,7 +423,60 @@ node --test tests/test_subsystems.js tests/test_full_suite.js
 
 ---
 
-## 5. The Ponytail Simplicity Rationale
+## 6. Mobile Flutter & Dart Architecture (v3.0.0 Pinoy Navigator)
+
+The mobile edition (`daily_compass_app/`) is architected with **Clean Architecture + Reactive State Management** in Flutter 3.47+ / Dart 3.13+:
+
+```mermaid
+flowchart TD
+    subgraph Presentation_Layer["Presentation Layer (Flutter Material 3)"]
+        Cockpit["TodayCockpitScreen (Single-Pane Anchor)"]
+        PetsaCard["Petsa de Peligro & Locked Pamasahe Vault"]
+        ByaheWidget["Multi-Leg Transit Pipeline & Beep Card"]
+        KkbCard["KKB / Abono Reconciler & 1-Tap GCash Reminder"]
+        SariSariCard["Sari-Sari Store & Canteen Lista"]
+        SomaticWidget["5-Gal Water Dispenser & Agahan/Tanghalian"]
+        SosSheet["Pahinga Muna 3-Question Brain Fog Modal"]
+    end
+
+    subgraph State_Layer["Reactive State Management (ChangeNotifier / Store)"]
+        Store["CompassStore Singleton"]
+        State["DailyCompassPinoyState (Immutable Data Model)"]
+    end
+
+    subgraph Domain_Layer["Pure Dart Domain Models (100% Offline)"]
+        PetsaModel["PetsaDePeligroState (Quincena & Reserve Math)"]
+        ByaheModel["CommuteLeg & BeepCard (Transit Telemetry)"]
+        KkbModel["AbonoItem (Polite Messenger Formatters)"]
+        SariSariModel["SariSariListaItem (Informal Credit)"]
+        SomaticModel["PinoyRoutineSlot & WaterRefillTracker"]
+    end
+
+    Cockpit --> Store
+    PetsaCard --> Store
+    ByaheWidget --> Store
+    KkbCard --> Store
+    SariSariCard --> Store
+    SomaticWidget --> Store
+    SosSheet --> Store
+
+    Store --> State
+    State --> Domain_Layer
+```
+
+### Core Mathematical Invariants (Dart)
+1. **Untouchable Pamasahe Reserve:**
+   $$R_{\text{pamasahe}} = D_{\text{rem}} \times \text{DailyCommuteBenchmark}$$
+2. **Safe Daily Spend ("Pwede Gastusin Ngayon"):**
+   $$\text{Pwede Gastusin} = \frac{\text{Total Wallet} - R_{\text{pamasahe}} - \sum \text{Pending Bills}}{D_{\text{rem}}} - \text{Expenses Today}$$
+3. **Beep Card Low Balance Threshold:**
+   $$\text{isLowBalance} \iff \text{BeepBalance} < ₱50.00$$
+
+All 10 unit and widget test suites execute via `flutter test` in `daily_compass_app/`.
+
+---
+
+## 7. The Ponytail Simplicity Rationale
 
 This project was developed strictly adhering to the **Ponytail Senior Engineering Mindset**:
 

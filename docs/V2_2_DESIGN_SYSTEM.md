@@ -2,7 +2,7 @@
 **Codename:** Nordic Twilight v2.2 / Sensory Speech, Chrono-Strips & Archetypes  
 **Version:** 2.2.0 Pro Max Ultra  
 **Status:** Canonical Implementation Standard  
-**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md), [V2_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_DESIGN_SYSTEM.md), and [V2_1_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_1_DESIGN_SYSTEM.md) | Synchronized with [V2_2_VOICE_AND_TEMPLATES_SPECS.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_2_VOICE_AND_TEMPLATES_SPECS.md)  
+**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md), [V2_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_DESIGN_SYSTEM.md), and [V2_1_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_1_DESIGN_SYSTEM.md) | Synchronized with [V2_2_VOICE_AND_TEMPLATES_SPECS.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_2_VOICE_AND_TEMPLATES_SPECS.md) | Followed by [V2_3_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_3_DESIGN_SYSTEM.md)  
 **Target Environment:** Local-First Web Cockpit / Mobile-First PWA (Zero External CDN/Framework Dependencies)
 
 ---

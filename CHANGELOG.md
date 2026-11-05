@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-11-05
+
+### 🇵🇭 Major Paradigm Pivot: Mobile Flutter & Dart Edition ("Pinoy Navigator")
+
+Complete transformation into a full-blown mobile phone application built in **Dart 3.x & Flutter 3.x**, grounded in the authentic lived experience of a Filipino college student and young salaryman navigating time blindness, executive dysfunction, high-friction multi-leg commutes, and Petsa de Peligro financial anxiety—with the primary language remaining in clear, soothing English.
+
+### Added
+
+#### 1. "Petsa de Peligro" Survival Engine & Untouchable Pamasahe Reserve
+- **Quincena & Baon Countdown:** Automatic calculation of days remaining until the 15th/30th sahod cutoff or weekly baon.
+- **Untouchable Pamasahe Reserve:** Strict mathematical protection ($R_{\text{pamasahe}} = D_{\text{rem}} \times \text{DailyCommuteBenchmark}$) locking away transit fare in a visual padlock vault so the user is never stranded without fare money.
+- **"Pwede Gastusin Ngayon" (Safe Daily Allowance):** Real-time daily safe-to-spend calculation after protecting commute fares and fixed bills.
+- **Cultural Severity Index:**
+  - *Ayos Pa* ($\ge ₱200/\text{day}$): Comfortable green.
+  - *Ingat Lang* ($₱80\text{--}₱199/\text{day}$): Calamansi amber caution.
+  - *Petsa de Peligro Mode* ($< ₱80/\text{day}$): Coral emergency warning.
+- **One-Tap Quick Log Pills:** `+ ₱15 Jeep`, `+ ₱25 Trike`, `+ ₱60 Jollijeep meal`, `+ ₱35 Canteen Snack`.
+
+#### 2. Multi-Leg Commute ("Byahe") & Survival Armor
+- **Sequential Multi-Modal Route Visualizer:** Tracks Tricycle TODA, Traditional/Modern Jeepney, MRT-3, LRT-1, LRT-2, EDSA Carousel, UV Express, and Angkas/Joyride legs with 1-tap completion.
+- **Beep Card NFC & Telemetry Badge:** Real-time stored-value balance tracking, ride equivalency translation (`"₱78.00 (3 rides left)"`), and automatic low-balance alert ($< ₱50.00$).
+- **Byahe EDC Survival Kit Checklist:**
+  - ☂️ *Payong (Umbrella)*: Tropical rain and heat protection.
+  - 🧖 *Bimpo / Handkerchief*: Sweat and dust wiping during humid rides.
+  - 🪙 *Barya (Exact Coins)*: Prevents delays and driver grumbling.
+  - 🔋 *Powerbank*: Essential for 2-hour EDSA gridlocks.
+  - 🧴 *Pocket Alcohol*: Hand hygiene after passing coins and holding railings.
+  - 🎧 *Earphones / Noise Shield*: Acoustic protection against engine noise and traffic.
+
+#### 3. KKB ("Kanya-Kanyang Bayad") & Abono Split Tracker
+- **"Ako Muna Nag-Abono" Problem Solved:** Eliminates social awkwardness when paying upfront for group lunches or coffee runs.
+- **Itemized Ledger:** Tracks pending receivables with statuses (`pending`, `paidGCash`, `paidMaya`, `paidCash`, `waivedLibre`).
+- **1-Tap Non-Awkward GCash Reminder Generator:** Automatically formats a polite, friendly copy-to-clipboard reminder for Messenger/SMS.
+
+#### 4. Sari-Sari Store & Canteen Lista
+- **Informal Neighborhood Credit Tracker:** Tracks store credit ("Palista kay Aling Nena" or school canteen tab) with itemized grocery breakdowns and payday settlement dates.
+
+#### 5. Somatic Philippine Rhythm & 5-Gallon Water Refill
+- **Cultural Meal Anchors:** Automatic 24h clock matching to *Almusal / Agahan*, *Tanghalian*, *Merienda*, and *Hapunan*.
+- **5-Gallon Blue Dispenser Jug Tracker:** Tracks water depletion with low-level warning when $\le 2$ days remain.
+- **Tactile Hydration Taps:** `+1 Baso (250ml)` and `+1 Tumbler (500ml)` quick increments.
+- **"Pahinga Muna" 3-Question Brain Fog SOS Modal Sheet:**
+  - *Step 1 (Katawan):* Cold water and wiping sweat after commute.
+  - *Step 2 (Paligid):* Noise and environment check with quiet grounding.
+  - *Step 3 (Isang Hakbang):* 1 frictionless 2-minute micro-action into 30-minute demand-free Safe Harbor.
+
+#### 6. Rigorous Automated Test Suite & Multi-Platform Harness
+- **10 / 10 automated unit and widget tests** passing in `daily_compass_app/test/`.
+- Full Android SDK 36 integration configured via `D:\andoid`.
+- Full Flutter Web production build compiled into `daily_compass_app/build/web`.
+
+---
+
 ## [2.2.0] - 2026-11-05
 
 ### 🚀 Major Feature Release: v2.2.0 Pro Max Ultra

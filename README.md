@@ -1,17 +1,68 @@
 # 🧭 Daily Compass
 
-> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit (v2.2.0 Pro Max Ultra)**  
+> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit**  
 > *Engineered for ADHD, time blindness, executive dysfunction, and sensory sensitivity.*
+>
+> 🇵🇭 **v3.0.0 Flutter Pinoy Edition:** Mobile Phone Application (Dart 3.x / Flutter 3.x) tailored for the Filipino student & salaryman lived experience.  
+> 🌐 **v2.2.0 Web / PWA Edition:** Zero-dependency, offline-first web cockpit deployable to GitHub Pages.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version: v2.2.0 Pro Max Ultra](https://img.shields.io/badge/Version-v2.2.0%20Pro%20Max%20Ultra-indigo.svg)](CHANGELOG.md)
-[![Zero Dependencies](https://img.shields.io/badge/Runtime%20Dependencies-0-success.svg)](package.json)
-[![Offline First](https://img.shields.io/badge/Architecture-Local--First%20PWA-brightgreen.svg)](sw.js)
-[![Tests Passing](https://img.shields.io/badge/Node.js%20Tests-61%2F61%20Pass-brightgreen.svg)](tests/test_full_suite.js)
+[![Flutter Version](https://img.shields.io/badge/Flutter-3.47.9%20Stable-02569B.svg?logo=flutter)](daily_compass_app/)
+[![Dart Version](https://img.shields.io/badge/Dart-3.13.7-0175C2.svg?logo=dart)](daily_compass_app/)
+[![Flutter Tests](https://img.shields.io/badge/Flutter%20Tests-10%2F10%20Pass-brightgreen.svg)](daily_compass_app/test/)
+[![Web Tests](https://img.shields.io/badge/Web%20Tests-61%2F61%20Pass-brightgreen.svg)](tests/test_full_suite.js)
 
 ---
 
-## 🌟 Overview
+## 📱 v3.0.0 Pinoy Navigator (Flutter & Dart Mobile App)
+
+Located in `daily_compass_app/`. Built specifically for Filipino college students (U-Belt, Diliman, Taft, Katipunan) and young corporate/BPO salary workers (Ortigas, Ayala Makati, BGC, Eastwood) dealing with multi-leg commutes, quincena cash flow, and executive dysfunction.
+
+### 🌟 Core Pinoy Mobile Features
+
+1. **💰 "Petsa de Peligro" Survival Engine:**
+   - Countdown to 15th/30th sahod cutoff or weekly baon.
+   - **Untouchable Pamasahe Reserve:** Strict mathematical protection ($N_{\text{days}} \times \text{DailyFare}$) locking commute money away in a vault with a padlock icon so you are never stranded.
+   - **"Pwede Gastusin Ngayon":** Real-time safe daily allowance for food and personal spending.
+   - 1-Tap Quick Log Pills: `₱15 Jeep`, `₱25 Trike`, `₱60 Jollijeep meal`, `₱35 Canteen snack`.
+
+2. **🚐 Multi-Leg Commute ("Byahe") & Beep Card Telemetry:**
+   - Sequential leg tracking (Tricycle $\rightarrow$ Jeepney $\rightarrow$ MRT-3/LRT-1/LRT-2 $\rightarrow$ Walking) with 1-tap fare deduction.
+   - Beep Card Balance with automatic low-balance alert ($< ₱50.00$) and ride-equivalency readout.
+   - **Byahe EDC Survival Kit:** Quick checklist for *Payong ☂️*, *Bimpo 🧖*, *Barya 🪙*, *Powerbank 🔋*, *Alcohol 🧴*, and *Earphones 🎧*.
+
+3. **🤝 KKB ("Kanya-Kanyang Bayad") & Abono Splitter:**
+   - Eliminates social awkwardness when paying upfront for group lunches or coffee runs (*"Ako muna"*).
+   - Generates friendly, copyable reminders for Messenger/Viber with your GCash/Maya number.
+
+4. **🏪 Sari-Sari Store & Canteen Lista:**
+   - Informal credit tracker for neighborhood sari-sari store purchases (*Aling Nena tab*) with itemized notes and payday settlement dates.
+
+5. **🌿 "Pahinga Muna" 3-Question Brain Fog SOS:**
+   - Somatic emergency de-escalation for tropical heat, Manila traffic, and sensory overwhelm:
+     - *Step 1 (Katawan):* Cold water and sweat wiping.
+     - *Step 2 (Paligid):* Noise shielding and finding a quiet corner.
+     - *Step 3 (Isang Hakbang):* Single 2-minute micro-action into a 30-minute demand-free Safe Harbor.
+
+### 🚀 Running the Flutter Mobile App
+
+```powershell
+# Navigate to the mobile app directory
+cd daily_compass_app
+
+# Run all automated tests (unit + widget)
+flutter test
+
+# Build for Web release (ready for github.io)
+flutter build web --release
+
+# When your Android Studio emulator is running or phone is mirrored:
+flutter run
+```
+
+---
+
+## 🌟 Web / PWA Edition (v2.2.0 Pro Max Ultra)
 
 Most productivity suites fail the people who need them most. When you live with ADHD, chronic time blindness, executive dysfunction, or sensory overwhelm:
 - **Red overdue badges** trigger guilt spirals and app abandonment.

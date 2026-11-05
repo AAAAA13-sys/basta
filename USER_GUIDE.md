@@ -592,4 +592,51 @@ Here is how a calm, grounded day feels with Daily Compass v2.2.0 Pro Max Ultra:
 
 ---
 
-*Daily Compass v2.2.0 Pro Max Ultra is 100% open source, local-first, and zero-dependency. Breathe easy and navigate your day.*
+## 22. Buhay Estudyante at Salaryman: Daily Compass Pinoy Mobile Guide
+
+When you are commuting in Metro Manila (jeepney queues, packed MRT-3 trains, tropical downpours) and counting down the days until the 15th or 30th sahod cutoff, the **Daily Compass Pinoy Mobile App** (`daily_compass_app/`) is your survival cockpit:
+
+### 💰 1. Petsa de Peligro & The Locked Pamasahe Vault
+- **The Golden Rule of Philippine Commuting:** You must **never** run out of fare money.
+- Daily Compass calculates your days until payday ($D_{\text{rem}}$) and **locks away your commute fare** ($D_{\text{rem}} \times \text{DailyFare}$) in a locked vault (`🔒 Untouchable Pamasahe Reserve`).
+- What remains is your **"Pwede Gastusin Ngayon"** (Safe-to-Spend). If you have ₱250 safe for today, you can buy lunch and milktea with zero guilt knowing your fare home is already safe in the vault.
+- **One-Tap Quick Log Pills:** On a bumpy jeepney with one hand holding the railing? Tap `₱15 Jeep`, `₱25 Trike`, `₱60 Jollijeep`, or `₱35 Canteen Snack` without opening any typing forms.
+
+### 🚐 2. Multi-Leg Byahe & Beep Card Monitor
+- Track your commute route: `Tricycle TODA` $\rightarrow$ `MRT-3 Line` $\rightarrow$ `Walk to Office`.
+- Tap any leg to complete it: train fare automatically deducts from your **Beep Card balance**, and jeepney/trike fare logs to your daily cash expense.
+- **Beep Alert:** When your card balance drops below ₱50.00, it glows amber so you can reload at the station kiosk before the 5:00 PM rush hour queue builds up.
+- **Byahe EDC Checklist:** Never leave home without checking off:
+  - ☂️ *Payong* (sudden tropical downpours)
+  - 🧖 *Bimpo* (wipe sweat and pollution)
+  - 🪙 *Barya* (exact fare ready)
+  - 🔋 *Powerbank* (battery for traffic jams)
+  - 🧴 *Alcohol* (hand hygiene after passing coins)
+  - 🎧 *Earphones* (sensory noise shield)
+
+### 🤝 3. KKB ("Kanya-Kanyang Bayad") & Abono Splitter
+- Group lunch at Jollijeep and the card reader was down? *"Ako muna nag-abono."*
+- Tap the person's name to generate a polite, friendly Messenger reminder with your GCash/Maya number:
+  > *"Hi Mark! Share mo pala kanina for Jollijeep Sisig is ₱85.00. Pwede pa-send sa GCash: 0917-XXX-XXXX (Ivan) pag convenient sayo. Salamat! 🙏"*
+- When they pay, 1-tap **"Paid GCash"** updates your balance immediately.
+
+### 🏪 4. Sari-Sari Store & Canteen Lista
+- Informal neighborhood credit ("Palista muna kay Aling Nena: 2 pancit canton, 1 itlog, 1 kopiko").
+- Log the store name and target payday settlement date so you always maintain good relations with your neighborhood tindahan.
+
+### 💧 5. 5-Gallon Water Refill & Somatic Routine Anchors
+- Tracks your blue 5-gallon water dispenser jug depletion with an alert when $\le 2$ days remain.
+- Tap `+1 Baso (250ml)` or `+1 Tumbler (500ml)` to stay hydrated in the 34°C tropical heat.
+- Live clock automatically anchors to Philippine meal times: *Almusal / Agahan*, *Tanghalian*, *Merienda*, and *Hapunan*.
+
+### 🌿 6. "Pahinga Muna" 3-Question Brain Fog SOS
+- Exhausted after a 2-hour commute gridlock? Executive function frozen?
+- Tap the top-right **"Pahinga Muna 🌿"** button:
+  1. *Katawan:* Drink a glass of cold water and wipe your sweat.
+  2. *Paligid:* Put on earphones or find a quiet spot.
+  3. *Isang Hakbang:* Close your eyes for 5 minutes.
+- The app enters a 30-minute demand-free Safe Harbor. Dahan-dahan lang, walang kailangang madaliin.
+
+---
+
+*Daily Compass v3.0.0 Pinoy Navigator & v2.2.0 Pro Max Ultra are 100% open source, local-first, and zero-dependency. Breathe easy and navigate your day.*

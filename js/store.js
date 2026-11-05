@@ -44,6 +44,25 @@ function deepClone(obj) {
 }
 
 /**
+ * Converts a time string "HH:MM" into integer minutes of the day (0..1439)
+ */
+export function timeToMinutes(t) {
+  if (!t || typeof t !== 'string' || !t.includes(':')) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+/**
+ * Converts integer minutes of the day (0..1439) into a time string "HH:MM"
+ */
+export function minutesToTime(mins) {
+  const mClamped = Math.max(0, Math.min(1439, Math.floor(mins || 0)));
+  const h = String(Math.floor(mClamped / 60)).padStart(2, '0');
+  const m = String(mClamped % 60).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/**
  * Pure JS SHA-256 fallback engine (RFC 6234 standard)
  * Ensures zero-dependency cryptographic hashing even in non-HTTPS / local file test contexts
  */
@@ -836,7 +855,10 @@ export const DEFAULT_STATE = {
   },
 
   // 8. 7-Day Rolling History & Daily Metric Archives (v2.1 Pro Max Plus)
-  dailyArchives: []
+  dailyArchives: [],
+
+  // 9. Compassionate Grounding Sessions (v2.3 Pro Max Quantum)
+  groundingSessions: []
 };
 
 /**
@@ -951,7 +973,7 @@ class StateStore {
     }
 
     // Arrays: use loaded if valid array, otherwise base
-    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad', 'medications', 'subscriptions', 'snapshots', 'dailyArchives'];
+    const arrayKeys = ['alarms', 'routines', 'cashTransactions', 'debts', 'habits', 'scratchpad', 'medications', 'subscriptions', 'snapshots', 'dailyArchives', 'groundingSessions'];
     for (const key of arrayKeys) {
       if (Array.isArray(loadedState[key])) {
         base[key] = loadedState[key];
@@ -2488,6 +2510,284 @@ class StateStore {
       templateId,
       templateName: template.name,
       snapshotId: snapshot.id
+    };
+  }
+
+  // =========================================================================
+  // v2.3 PRO MAX QUANTUM SUBSYSTEMS
+  // =========================================================================
+
+  // --- 1. Day Replay & Temporal Scrub Engine ---
+  /**
+   * Reconstructs state telemetry at a specific minute (0..1439) of a target date.
+   * Enables interactive non-judgmental scrubbing: "Where did my time/energy go today?"
+   */
+  getTimelineSnapshotForMinute(minuteOfDay = 0, targetDateString = getLocalDateString(0)) {
+    const mClamped = Math.max(0, Math.min(1439, Math.floor(Number(minuteOfDay) || 0)));
+    const timeString = minutesToTime(mClamped);
+
+    // 1. Locate active routine block at minuteOfDay
+    const routines = this.state.routines || [];
+    let activeRoutine = null;
+
+    for (const r of routines) {
+      const sMin = timeToMinutes(r.startTime || r.start);
+      const eMin = timeToMinutes(r.endTime || r.end);
+
+      if (sMin <= eMin) {
+        if (mClamped >= sMin && mClamped < eMin) {
+          activeRoutine = { ...r, startMinutes: sMin, endMinutes: eMin };
+          break;
+        }
+      } else {
+        // Cross-midnight routine block
+        if (mClamped >= sMin || mClamped < eMin) {
+          activeRoutine = { ...r, startMinutes: sMin, endMinutes: eMin, isCrossMidnight: true };
+          break;
+        }
+      }
+    }
+
+    // 2. Identify chronological events up to or at this minute on targetDate
+    const transactions = (this.state.cashTransactions || []).filter(
+      (t) => t.date === targetDateString
+    );
+    let cumulativeSpent = 0;
+    const eventsAtMinute = [];
+
+    transactions.forEach((tx) => {
+      const txM = timeToMinutes(tx.time || '12:00');
+      if (txM <= mClamped) {
+        if (tx.type === 'expense') {
+          cumulativeSpent += Number(tx.amount || 0);
+        }
+      }
+      // Nearby event marker (within 15 minutes)
+      if (Math.abs(txM - mClamped) <= 15) {
+        eventsAtMinute.push({
+          type: 'expense',
+          time: tx.time,
+          minutes: txM,
+          label: `${tx.type === 'income' ? '+$' : '-$'}${Number(tx.amount).toFixed(2)} (${tx.category || 'Expense'})`,
+          category: tx.category
+        });
+      }
+    });
+
+    // 3. Hydration check
+    const hydration = this.state.hydration || { targetMl: 2000, currentMl: 0 };
+    const waterPaceMl = Math.min(hydration.currentMl, Math.round((mClamped / 1440) * hydration.currentMl));
+
+    // 4. Medications adherence at this time
+    const medications = (this.state.medications || []).map((med) => {
+      let isTakenAtMinute = false;
+      if (med.takenTimestamp) {
+        const takenDate = med.takenTimestamp.slice(0, 10);
+        if (takenDate === targetDateString) {
+          const takenM = timeToMinutes(med.takenTimestamp.slice(11, 16));
+          isTakenAtMinute = takenM <= mClamped;
+        }
+      }
+      return {
+        id: med.id,
+        name: med.name,
+        timeOfDay: med.timeOfDay,
+        isTakenAtMinute
+      };
+    });
+
+    // 5. Financial Safe-to-Spend at this minute
+    const budgetCap = this.state.profile?.dailyBudgetCap ?? this.state.settings?.dailyBudgetCap ?? 50;
+    const safeSpendAtMinute = budgetCap - cumulativeSpent;
+
+    return {
+      minuteOfDay: mClamped,
+      timeString,
+      targetDate: targetDateString,
+      percentOfDay: Math.round((mClamped / 1440) * 100),
+      activeRoutine,
+      cumulativeSpent,
+      budgetCap,
+      safeSpendAtMinute,
+      waterPaceMl,
+      medications,
+      eventsAtMinute,
+      hasEvents: eventsAtMinute.length > 0
+    };
+  }
+
+  // --- 2. Anchor Habit Stacking Chains ---
+  /**
+   * Links a habit as a micro-step stacked upon an established Anchor habit.
+   * Grounded in BJ Fogg Behavior Design: Anchor -> Trigger -> Action -> Reward
+   */
+  linkHabitToAnchor(habitId, anchorHabitId) {
+    if (!habitId || !anchorHabitId) {
+      throw new Error('[DailyCompass:Store] Both habitId and anchorHabitId are required.');
+    }
+    if (habitId === anchorHabitId) {
+      throw new Error('[DailyCompass:Store] A habit cannot anchor to itself.');
+    }
+
+    const habits = this.state.habits || [];
+    const habit = habits.find((h) => h.id === habitId);
+    const anchor = habits.find((h) => h.id === anchorHabitId);
+
+    if (!habit) throw new Error(`[DailyCompass:Store] Habit "${habitId}" not found.`);
+    if (!anchor) throw new Error(`[DailyCompass:Store] Anchor habit "${anchorHabitId}" not found.`);
+
+    // Check for circular dependency
+    let curr = anchor;
+    while (curr && curr.anchorHabitId) {
+      if (curr.anchorHabitId === habitId) {
+        throw new Error('[DailyCompass:Store] Circular habit chain detected. Cannot link.');
+      }
+      curr = habits.find((h) => h.id === curr.anchorHabitId);
+    }
+
+    this.updateItem('habits', habitId, { anchorHabitId });
+    return this.getHabitChains();
+  }
+
+  /**
+   * Unlinks a habit from its anchor, making it a standalone habit.
+   */
+  unlinkHabitFromAnchor(habitId) {
+    const habits = this.state.habits || [];
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) throw new Error(`[DailyCompass:Store] Habit "${habitId}" not found.`);
+
+    this.updateItem('habits', habitId, { anchorHabitId: null });
+    return this.getHabitChains();
+  }
+
+  /**
+   * Groups habits into visual relational synaptic chains.
+   */
+  getHabitChains(targetDateString = getLocalDateString(0)) {
+    const habits = this.state.habits || [];
+    const roots = habits.filter((h) => !h.anchorHabitId);
+
+    return roots.map((root) => {
+      const isRootDone = (root.completedDates || []).includes(targetDateString);
+      const chained = habits.filter((h) => h.anchorHabitId === root.id);
+
+      const chainSteps = [
+        {
+          ...root,
+          isAnchor: true,
+          isCompleted: isRootDone
+        },
+        ...chained.map((ch, idx) => ({
+          ...ch,
+          isAnchor: false,
+          chainIndex: idx + 1,
+          isCompleted: (ch.completedDates || []).includes(targetDateString),
+          isTriggerReady: isRootDone
+        }))
+      ];
+
+      const allCompleted = chainSteps.every((s) => s.isCompleted);
+      const completedCount = chainSteps.filter((s) => s.isCompleted).length;
+
+      return {
+        anchorId: root.id,
+        anchorTitle: root.title,
+        anchorIcon: root.icon || '✨',
+        totalSteps: chainSteps.length,
+        completedCount,
+        allCompleted,
+        isChainActive: isRootDone,
+        steps: chainSteps
+      };
+    });
+  }
+
+  // --- 3. Debt Payback & Cash Impact Simulator ---
+  /**
+   * Simulates the exact financial impact of a debt settlement before committing money.
+   * Delivers Financial Serenity: tests Safe-to-Spend and End-of-Month Reserve Cushion.
+   */
+  simulateDebtSettlement(debtId, paymentAmount, direction = 'pay') {
+    const debts = this.state.debts || [];
+    const debt = debts.find((d) => d.id === debtId);
+    const amt = Math.max(0, Number(paymentAmount) || 0);
+
+    const curSafeSpend = typeof this.getSafeToSpendToday === 'function' ? this.getSafeToSpendToday() : 40;
+
+    const bufferMetrics = typeof this.getEndMonthCashBuffer === 'function' ? this.getEndMonthCashBuffer() : { projectedBuffer: 100 };
+    const curBuffer = bufferMetrics.projectedBuffer ?? bufferMetrics.buffer ?? 100;
+
+    const debtBalance = debt ? (debt.remainingBalance ?? debt.remainingAmount ?? debt.remaining ?? debt.amount ?? 0) : 0;
+    const simulatedRemainingDebt = Math.max(0, debtBalance - amt);
+
+    // Evaluate deltas
+    // If direction === 'pay' (user paying debt out): decreases safe spend and buffer
+    // If direction === 'receive' (user receiving money back): increases safe spend and buffer
+    const isPayingOut = direction === 'pay' || direction === 'pay_out' || (debt && debt.type === 'i_owe_them');
+    const multiplier = isPayingOut ? -1 : 1;
+
+    const simSafeSpend = curSafeSpend + (multiplier * amt);
+    const simBuffer = curBuffer + (multiplier * amt);
+
+    // Safety status calculation
+    let impactStatus = 'comfort';
+    let impactMessage = 'Safe to proceed. Your daily living and monthly cushion are protected.';
+
+    if (simBuffer < 0) {
+      impactStatus = 'deficit';
+      impactMessage = 'Caution: This payment dips your projected month-end cushion into a deficit.';
+    } else if (simSafeSpend < 0) {
+      impactStatus = 'daily_tight';
+      impactMessage = 'Note: This exceeds today\'s daily cap, but your monthly cushion remains positive.';
+    }
+
+    return {
+      debtId,
+      debtPerson: debt ? (debt.person || debt.counterpartyName || 'Counterparty') : 'Unknown',
+      currentDebtBalance: debtBalance,
+      paymentAmount: amt,
+      simulatedRemainingDebt,
+      direction: isPayingOut ? 'pay' : 'receive',
+      currentSafeSpend: Number(curSafeSpend.toFixed(2)),
+      simulatedSafeSpend: Number(simSafeSpend.toFixed(2)),
+      deltaSafeSpend: Number((multiplier * amt).toFixed(2)),
+      currentBuffer: Number(curBuffer.toFixed(2)),
+      simulatedBuffer: Number(simBuffer.toFixed(2)),
+      deltaBuffer: Number((multiplier * amt).toFixed(2)),
+      impactStatus,
+      impactMessage
+    };
+  }
+
+  // --- 4. Brain Fog Emergency Reboot (3-Question SOS) ---
+  /**
+   * Compassionate somatic de-escalation for severe executive freeze or sensory panic.
+   * Records grounding session and enables Safe Harbor mode for 30 minutes.
+   */
+  recordEmergencyGrounding(responses = {}) {
+    const session = {
+      id: generateId('sos'),
+      timestamp: new Date().toISOString(),
+      q1PhysicalComfort: responses.q1PhysicalComfort ?? true,
+      q2SensoryAdjustment: responses.q2SensoryAdjustment || 'calm',
+      q3MicroStepSelected: responses.q3MicroStepSelected || 'Take 3 deep breaths and sip water',
+      durationMinutes: responses.durationMinutes || 30
+    };
+
+    const currentSessions = this.state.groundingSessions || [];
+    this.updateModule('groundingSessions', [...currentSessions, session]);
+
+    // Activate gentle mode if requested
+    if (responses.enableGentleMode) {
+      this.setEnergyLevel(20);
+    }
+
+    return {
+      success: true,
+      sessionId: session.id,
+      session,
+      safeHarborUntil: new Date(Date.now() + session.durationMinutes * 60000).toISOString()
     };
   }
 }

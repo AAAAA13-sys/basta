@@ -180,7 +180,7 @@ global.window = {
 global.AudioContext = MockAudioContext;
 
 // Import application modules
-const { store, STORAGE_KEY, DEFAULT_STATE, getLocalDateString, generateId, normalizeSpokenTranscript, inferScratchpadTag } = await import('../js/store.js');
+const { store, STORAGE_KEY, DEFAULT_STATE, getLocalDateString, generateId, normalizeSpokenTranscript, inferScratchpadTag, timeToMinutes, minutesToTime } = await import('../js/store.js');
 const { soundEngine, audio } = await import('../js/audio.js');
 
 // ============================================================================
@@ -1208,5 +1208,120 @@ describe('Suite 9: v2.2 Pro Max Ultra Subsystems', () => {
     const rolledBack = store.restoreAutoSnapshot(res.snapshotId);
     assert.strictEqual(rolledBack, true);
     assert.strictEqual(store.getState().settings.dailyBudgetCap, 50); // Default restored
+  });
+});
+
+// ============================================================================
+// TEST SUITE 10: v2.3 PRO MAX QUANTUM SUBSYSTEMS
+// ============================================================================
+
+describe('Suite 10: v2.3 Pro Max Quantum Subsystems', () => {
+  test('Time Conversion Helpers: timeToMinutes and minutesToTime bidirectional conversions', () => {
+    assert.strictEqual(timeToMinutes('00:00'), 0);
+    assert.strictEqual(timeToMinutes('01:30'), 90);
+    assert.strictEqual(timeToMinutes('12:00'), 720);
+    assert.strictEqual(timeToMinutes('23:59'), 1439);
+
+    assert.strictEqual(minutesToTime(0), '00:00');
+    assert.strictEqual(minutesToTime(90), '01:30');
+    assert.strictEqual(minutesToTime(720), '12:00');
+    assert.strictEqual(minutesToTime(1439), '23:59');
+  });
+
+  test('Temporal Scrubbing: getTimelineSnapshotForMinute reconstructs state and active routine across 1440 minutes', () => {
+    // 08:00 AM snapshot (should match morning routine 07:00 - 08:30)
+    const snapMorning = store.getTimelineSnapshotForMinute(480); // 480 mins = 08:00
+    assert.strictEqual(snapMorning.minuteOfDay, 480);
+    assert.strictEqual(snapMorning.timeString, '08:00');
+    assert.ok(snapMorning.activeRoutine);
+    assert.strictEqual(snapMorning.activeRoutine.id, 'routine-morning');
+    assert.strictEqual(typeof snapMorning.safeSpendAtMinute, 'number');
+    assert.strictEqual(typeof snapMorning.percentOfDay, 'number');
+
+    // 03:00 AM snapshot (should have no routine or nocturnal)
+    const snapNight = store.getTimelineSnapshotForMinute(180); // 180 mins = 03:00
+    assert.strictEqual(snapNight.timeString, '03:00');
+    assert.strictEqual(snapNight.minuteOfDay, 180);
+  });
+
+  test('Anchor Habit Stacking: linkHabitToAnchor links children to root anchor', () => {
+    const habits = store.getState().habits;
+    const anchorId = habits[0].id;
+    const childId = habits[1].id;
+
+    // Link child to anchor
+    store.linkHabitToAnchor(childId, anchorId);
+    const chains = store.getHabitChains();
+    const anchorChain = chains.find((c) => c.anchorId === anchorId);
+    assert.ok(anchorChain);
+    assert.strictEqual(anchorChain.steps.length, 2);
+    assert.strictEqual(anchorChain.steps[0].id, anchorId);
+    assert.strictEqual(anchorChain.steps[1].id, childId);
+
+    // Unlink child
+    store.unlinkHabitFromAnchor(childId);
+    const unlinkedChains = store.getHabitChains();
+    const cleanChain = unlinkedChains.find((c) => c.anchorId === anchorId);
+    assert.strictEqual(cleanChain.steps.length, 1);
+  });
+
+  test('Anchor Habit Stacking: prevents self-linking and circular chains', () => {
+    const habits = store.getState().habits;
+    const h1 = habits[0].id;
+    const h2 = habits[1].id;
+
+    // Self link throws error
+    assert.throws(() => {
+      store.linkHabitToAnchor(h1, h1);
+    }, /cannot anchor to itself/);
+
+    // Circular link check: link h2 -> h1, then attempting h1 -> h2 throws error
+    store.linkHabitToAnchor(h2, h1);
+    assert.throws(() => {
+      store.linkHabitToAnchor(h1, h2);
+    }, /Circular habit chain/);
+
+    // Cleanup
+    store.unlinkHabitFromAnchor(h2);
+  });
+
+  test('Debt Simulator: simulateDebtSettlement computes safe-to-spend and monthly cushion deltas', () => {
+    const debt = store.getState().debts[0];
+    assert.ok(debt);
+
+    // Simulate paying $20
+    const sim = store.simulateDebtSettlement(debt.id, 20, 'pay');
+    assert.strictEqual(sim.debtId, debt.id);
+    assert.strictEqual(sim.paymentAmount, 20);
+    assert.strictEqual(sim.deltaSafeSpend, -20);
+    assert.strictEqual(sim.deltaBuffer, -20);
+    assert.strictEqual(sim.simulatedSafeSpend, sim.currentSafeSpend - 20);
+    assert.strictEqual(sim.simulatedBuffer, sim.currentBuffer - 20);
+    assert.ok(['comfort', 'daily_tight', 'deficit'].includes(sim.impactStatus));
+    assert.ok(typeof sim.impactMessage === 'string');
+  });
+
+  test('Brain Fog SOS: recordEmergencyGrounding records session and activates 30m safe harbor', () => {
+    const res = store.recordEmergencyGrounding({
+      q1PhysicalComfort: true,
+      q2SensoryAdjustment: 'pink-rain',
+      q3MicroStepSelected: 'Drink 1 glass of cold water',
+      enableGentleMode: true
+    });
+
+    assert.strictEqual(res.success, true);
+    assert.ok(res.sessionId);
+    assert.ok(res.safeHarborUntil);
+
+    // Verify session was appended
+    const state = store.getState();
+    assert.ok(Array.isArray(state.groundingSessions));
+    const saved = state.groundingSessions.find((s) => s.id === res.sessionId);
+    assert.ok(saved);
+    assert.strictEqual(saved.q2SensoryAdjustment, 'pink-rain');
+
+    // Verify gentle mode was triggered
+    assert.strictEqual(state.energyBattery.level, 20);
+    assert.strictEqual(state.energyBattery.isGentleMode, true);
   });
 });
