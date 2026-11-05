@@ -45,36 +45,30 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bgCanvas,
         elevation: 0,
+        titleSpacing: 16,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.manilaSkyBlue.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.manilaSkyBlue.withOpacity(0.4)),
-              ),
-              child: const Text(
-                '🧭 Daily Compass',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
+            const Text(
+              '🧭 Daily Compass',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.bambooSage.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
-                'Pinoy Edition',
+                'Pinoy',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.bambooSage,
                 ),
               ),
@@ -104,6 +98,16 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openAddExpenseSheet(context),
+        backgroundColor: AppColors.bambooSage,
+        foregroundColor: AppColors.textInverse,
+        icon: const Icon(Icons.add_rounded, size: 20),
+        label: const Text(
+          'Mag-Log',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        ),
       ),
       body: SafeArea(
         child: ListView(
@@ -408,38 +412,58 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Text('🚐', style: TextStyle(fontSize: 18)),
-                  SizedBox(width: 8),
-                  Text(
-                    'Multi-Leg Byahe Tracker',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.manilaSkyBlue,
+              const Expanded(
+                child: Row(
+                  children: [
+                    Text('🚐', style: TextStyle(fontSize: 18)),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Byahe Tracker',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.manilaSkyBlue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Beep Card Interactive Mini Badge
+              InkWell(
+                onTap: () => _openBeepTopUpSheet(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: beep.isLowBalance
+                        ? AppColors.jeepneyCoral.withOpacity(0.2)
+                        : AppColors.beepMint.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: beep.isLowBalance ? AppColors.jeepneyCoral : AppColors.beepMint,
                     ),
                   ),
-                ],
-              ),
-              // Beep Card Mini Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: beep.isLowBalance
-                      ? AppColors.jeepneyCoral.withOpacity(0.2)
-                      : AppColors.beepMint.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: beep.isLowBalance ? AppColors.jeepneyCoral : AppColors.beepMint,
-                  ),
-                ),
-                child: Text(
-                  'Beep: ₱${beep.balance.toStringAsFixed(0)} (${beep.estimatedRidesRemaining} rides)',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: beep.isLowBalance ? AppColors.jeepneyCoral : AppColors.beepMint,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Beep: ₱${beep.balance.toStringAsFixed(0)} (${beep.estimatedRidesRemaining} rides)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: beep.isLowBalance ? AppColors.jeepneyCoral : AppColors.beepMint,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 13,
+                        color: beep.isLowBalance ? AppColors.jeepneyCoral : AppColors.beepMint,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -596,27 +620,61 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              const Expanded(
+                child: Row(
+                  children: [
+                    Text('🤝', style: TextStyle(fontSize: 18)),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'KKB & Abono ("Ako Muna")',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.gcashCyan,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
                 children: [
-                  Text('🤝', style: TextStyle(fontSize: 18)),
-                  SizedBox(width: 8),
                   Text(
-                    'KKB & Abono ("Ako Muna")',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.gcashCyan,
+                    'May Utang: ₱${state.totalOwedToMe.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.bambooSage,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () => _openAddAbonoSheet(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.gcashCyan.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.add_rounded, size: 14, color: AppColors.gcashCyan),
+                          Text(
+                            'Add',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.gcashCyan,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ),
-              Text(
-                'May Utang: ₱${state.totalOwedToMe.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.bambooSage,
-                ),
               ),
             ],
           ),
@@ -660,20 +718,36 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (isPending)
-                    TextButton(
+                  if (isPending) ...[
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 15, color: AppColors.gcashCyan),
+                      tooltip: 'Copy reminder message for Messenger',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: () {
-                        HapticFeedback.lightImpact();
+                        HapticFeedback.selectionClick();
                         final reminder = abono.generateFriendlyReminder(
                           myName: 'Ivan',
                           myGcashNumber: '0917-XXX-XXXX',
                         );
                         Clipboard.setData(ClipboardData(text: reminder));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Copied friendly reminder for ${abono.debtorName}! 💬'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    TextButton(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
                         widget.store.settleAbono(abono.id, AbonoStatus.paidGCash);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Marked Paid via GCash & reminder copied!'),
-                            duration: Duration(seconds: 2),
+                          SnackBar(
+                            content: Text('${abono.debtorName} marked Paid via GCash! ✓'),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       },
@@ -683,8 +757,9 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         minimumSize: Size.zero,
                       ),
-                      child: const Text('Paid GCash', style: TextStyle(fontSize: 11)),
+                      child: const Text('Paid', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
+                  ],
                 ],
               ),
             );
@@ -1005,6 +1080,421 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
     );
   }
 
+  void _openBeepTopUpSheet(BuildContext context) {
+    final beep = widget.store.state.beepCard;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgCardElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Text('💳', style: TextStyle(fontSize: 20)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Beep Card Reload Telemetry',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.beepMint,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E3A3A), Color(0xFF152A2A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.beepMint.withOpacity(0.4)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'beep™',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: AppColors.beepMint,
+                          ),
+                        ),
+                        Text(
+                          'LRT-1 • LRT-2 • MRT-3 • BGC Bus',
+                          style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '₱${beep.balance.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.beepMint,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '~${beep.estimatedRidesRemaining} train rides remaining • Last: ${beep.lastTapStation ?? "Cubao"}',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              const Text(
+                'Mabilisang Dagdag (Quick Top-Up):',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+
+              Wrap(
+                spacing: 8,
+                children: [50, 100, 200, 500].map((amt) {
+                  return ActionChip(
+                    backgroundColor: AppColors.bgCanvas,
+                    side: const BorderSide(color: AppColors.beepMint),
+                    label: Text(
+                      '+₱$amt',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.beepMint,
+                      ),
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      widget.store.updateBeepCardBalance(beep.balance + amt);
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Reloaded +₱$amt to Beep Card! Bagong Balanse: ₱${(beep.balance + amt).toStringAsFixed(0)}'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openAddAbonoSheet(BuildContext context) {
+    final nameCtrl = TextEditingController();
+    final occasionCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final gcashCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgCardElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Text('🤝', style: TextStyle(fontSize: 20)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Bagong Abono ("Ako Muna")',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.gcashCyan,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Pangalan ng May Utang (e.g. Ken, Bea, Mark)',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  filled: true,
+                  fillColor: AppColors.bgCanvas,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: occasionCtrl,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Saan Ginastos (e.g. Mang Inasal lunch, Coffee)',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  filled: true,
+                  fillColor: AppColors.bgCanvas,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: amountCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: 'Halaga (₱)',
+                  prefixText: '₱ ',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  filled: true,
+                  fillColor: AppColors.bgCanvas,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final name = nameCtrl.text.trim();
+                  final occasion = occasionCtrl.text.trim();
+                  final amt = double.tryParse(amountCtrl.text.trim()) ?? 0.0;
+                  if (name.isEmpty || amt <= 0) return;
+
+                  HapticFeedback.lightImpact();
+                  widget.store.addAbono(
+                    debtorName: name,
+                    occasion: occasion.isEmpty ? 'Pinasabay' : occasion,
+                    amount: amt,
+                    gcashNumber: gcashCtrl.text.trim().isNotEmpty ? gcashCtrl.text.trim() : null,
+                  );
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Nailista si $name para sa ₱${amt.toStringAsFixed(2)}! 📝'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.check_rounded),
+                label: const Text('Ilista ang Abono', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gcashCyan,
+                  foregroundColor: AppColors.textPrimary,
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openAddExpenseSheet(BuildContext context) {
+    final amtCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgCardElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Text('💸', style: TextStyle(fontSize: 20)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Mag-Log ng Gastos',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.bambooSage,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              const Text(
+                'Piliin ang karaniwang bilihin:',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  {'icon': '🚐', 'label': 'Jeep', 'amt': 15.0},
+                  {'icon': '🛺', 'label': 'Trike', 'amt': 25.0},
+                  {'icon': '🚆', 'label': 'MRT', 'amt': 24.0},
+                  {'icon': '🍗', 'label': 'Jollijeep', 'amt': 60.0},
+                  {'icon': '🍲', 'label': 'Karinderya', 'amt': 75.0},
+                  {'icon': '🧋', 'label': 'Milktea', 'amt': 95.0},
+                  {'icon': '🥤', 'label': 'Tubig', 'amt': 15.0},
+                  {'icon': '🏪', 'label': 'Sari-Sari', 'amt': 40.0},
+                ].map((item) {
+                  return ActionChip(
+                    backgroundColor: AppColors.bgCanvas,
+                    side: const BorderSide(color: AppColors.borderSubtle),
+                    avatar: Text(item['icon'] as String, style: const TextStyle(fontSize: 12)),
+                    label: Text(
+                      '${item['label']} ₱${(item['amt'] as double).toStringAsFixed(0)}',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      widget.store.logExpense(item['amt'] as double, category: item['label'] as String);
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Nai-record: ₱${(item['amt'] as double).toStringAsFixed(0)} para sa ${item['label']}!'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 14),
+
+              TextField(
+                controller: amtCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                decoration: InputDecoration(
+                  labelText: 'Ibang Halaga (Custom Amount ₱)',
+                  prefixText: '₱ ',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  filled: true,
+                  fillColor: AppColors.bgCanvas,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: noteCtrl,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Deskripsyon (optional)',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  filled: true,
+                  fillColor: AppColors.bgCanvas,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              ElevatedButton.icon(
+                onPressed: () {
+                  final amt = double.tryParse(amtCtrl.text.trim()) ?? 0.0;
+                  if (amt <= 0) return;
+                  final note = noteCtrl.text.trim();
+
+                  HapticFeedback.lightImpact();
+                  widget.store.logExpense(amt, category: 'Custom', note: note.isNotEmpty ? note : null);
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Nai-record: ₱${amt.toStringAsFixed(2)}!'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.check_rounded),
+                label: const Text('I-record ang Gastos', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.bambooSage,
+                  foregroundColor: AppColors.textInverse,
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String _formatCurrentTime() {
     final now = widget.store.state.currentTime;
     final hour = now.hour;
@@ -1014,3 +1504,4 @@ class _TodayCockpitScreenState extends State<TodayCockpitScreen> {
     return '$formattedHour:$minute $period';
   }
 }
+

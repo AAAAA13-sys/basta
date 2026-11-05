@@ -33,3 +33,4 @@ class DailyCompassPinoyApp extends StatelessWidget {
     );
   }
 }
+

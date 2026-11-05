@@ -19,7 +19,7 @@ void main() {
 
     // 1. Verify Header & Badges
     expect(find.text('🧭 Daily Compass'), findsOneWidget);
-    expect(find.text('Pinoy Edition'), findsOneWidget);
+    expect(find.text('Pinoy'), findsOneWidget);
     expect(find.text('Pahinga Muna'), findsOneWidget);
 
     // 2. Verify Petsa de Peligro Card & Pamasahe Vault
@@ -40,7 +40,7 @@ void main() {
     expect(store.state.petsa.cashOnHand, equals(initialCash - 15.0));
 
     // 5. Verify Multi-Leg Commute Tracker & Beep Card
-    expect(find.text('Multi-Leg Byahe Tracker'), findsOneWidget);
+    expect(find.text('Byahe Tracker'), findsOneWidget);
     expect(find.textContaining('Beep:'), findsOneWidget);
     expect(find.textContaining('Payong (Umbrella)'), findsOneWidget);
 

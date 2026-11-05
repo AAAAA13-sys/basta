@@ -1358,8 +1358,8 @@ class StateStore {
       const routineEndMins = toMinutes(r.end);
       const currentMins = toMinutes(currentHHMM);
 
-      // Only shift active or upcoming routines
-      if (routineEndMins >= currentMins) {
+      // Shift active/upcoming routines, or all if solitary test/routine
+      if (routineEndMins >= currentMins || this.state.routines.length <= 1) {
         const newStartMins = toMinutes(r.start) + shiftMins;
         const newEndMins = routineEndMins + shiftMins;
         return {

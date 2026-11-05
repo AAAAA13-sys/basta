@@ -388,3 +388,4 @@ class CompassStore extends ChangeNotifier {
     notifyListeners();
   }
 }
+

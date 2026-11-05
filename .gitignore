@@ -7,3 +7,9 @@ Thumbs.db
 graphify-out/cache/
 graphify-out/.*
 
+# Flutter & Android build outputs
+daily_compass_app/build/
+daily_compass_app/android/build/
+daily_compass_app/android/.gradle/
+daily_compass_app/.dart_tool/
+

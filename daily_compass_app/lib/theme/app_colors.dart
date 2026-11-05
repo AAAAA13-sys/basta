@@ -49,3 +49,4 @@ class AppColors {
     onSurface: textPrimary,
   );
 }
+
