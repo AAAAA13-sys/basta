@@ -2,7 +2,7 @@
 **Codename:** Nordic Twilight v2.1 / Calm Privacy & Temporal Sculpting  
 **Version:** 2.1.0 Pro Max Plus  
 **Status:** Canonical Implementation Standard  
-**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md) and [V2_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_DESIGN_SYSTEM.md) | Synchronized with [V2_1_EDITOR_AND_PRIVACY_SPECS.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_1_EDITOR_AND_PRIVACY_SPECS.md)  
+**Document Context:** Extension to [DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/DESIGN_SYSTEM.md) and [V2_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_DESIGN_SYSTEM.md) | Synchronized with [V2_1_EDITOR_AND_PRIVACY_SPECS.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_1_EDITOR_AND_PRIVACY_SPECS.md) | Followed by [V2_2_DESIGN_SYSTEM.md](file:///c:/Users/Ivan/Pictures/Daily%20Tracker/docs/V2_2_DESIGN_SYSTEM.md)  
 **Target Environment:** Local-First Web Cockpit / Mobile-First PWA (Zero External CDN/Framework Dependencies)
 
 ---

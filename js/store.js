@@ -139,6 +139,76 @@ export async function sha256Hex(text) {
 }
 
 /**
+ * Normalizes speech dictation transcripts
+ * Converts spoken punctuation words, cleans boundary whitespace, and capitalizes sentences
+ */
+export function normalizeSpokenTranscript(transcript = '') {
+  if (!transcript || typeof transcript !== 'string') return '';
+  let text = transcript.trim();
+
+  // Spoken punctuation replacement
+  text = text
+    .replace(/\b(period|full stop)\b/gi, '.')
+    .replace(/\b(comma)\b/gi, ',')
+    .replace(/\b(question mark)\b/gi, '?')
+    .replace(/\b(exclamation mark|exclamation point)\b/gi, '!')
+    .replace(/\b(new line|next line)\b/gi, '\n');
+
+  // Fix spaces before punctuation (e.g. "milk ." -> "milk.")
+  text = text.replace(/\s+([.,!?:;])/g, '$1');
+
+  // Clean conversational filler words at boundary
+  text = text.replace(/\b(um|uh|like)\s+/gi, '');
+
+  // Capitalize first letter of each sentence
+  text = text.replace(/(^\s*|[.!?]\s+)([a-z])/g, (match, prefix, char) => prefix + char.toUpperCase());
+
+  // Capitalize standalone "i"
+  text = text.replace(/\bi\b/g, 'I');
+
+  return text.trim();
+}
+
+/**
+ * Semantic Tag Inferencing Heuristic
+ * Automatically detects whether a thought is a To-Do, To-Buy, Idea, Later, or Reflection
+ */
+export function inferScratchpadTag(text = '') {
+  const lower = String(text || '').toLowerCase().trim();
+
+  // 1. To-Buy Intent
+  if (/^(buy|purchase|order|get|pick up|need to get)\b/.test(lower) ||
+      lower.includes('grocery') || lower.includes('store') || lower.includes('supermarket') ||
+      lower.includes('milk') || lower.includes('eggs') || lower.includes('bread') || lower.includes('cartridge')) {
+    return { tag: 'To-Buy', category: 'to-buy' };
+  }
+
+  // 2. To-Do Intent
+  if (/^(call|email|text|send|submit|finish|pay|schedule|book|fix|clean|cancel)\b/.test(lower) ||
+      lower.includes('remember to') || lower.includes('need to') || lower.includes('don\'t forget') ||
+      lower.includes('deadline') || lower.includes('appointment')) {
+    return { tag: 'To-Do', category: 'to-do' };
+  }
+
+  // 3. Idea Intent
+  if (/^(idea|what if|maybe|concept|project|think about|brainstorm)\b/.test(lower)) {
+    return { tag: 'Idea', category: 'idea' };
+  }
+
+  // 4. Later / Someday Intent
+  if (/^(later|someday|eventually|next week|down the road)\b/.test(lower)) {
+    return { tag: 'Later', category: 'later' };
+  }
+
+  // 5. Emotional / Somatic Reflection
+  if (/^(feeling|felt|tired|overwhelmed|happy|grateful|anxious|vent|today was)\b/.test(lower)) {
+    return { tag: 'Reflection', category: 'thought' };
+  }
+
+  return { tag: 'Thought', category: 'idea' };
+}
+
+/**
  * Initial Seed Data for immediate, rich first-time user experience
  */
 export const DEFAULT_STATE = {
@@ -780,6 +850,7 @@ class StateStore {
     this.state = null;
     this.isStorageAvailable = this.checkStorageAvailability();
     this._lastShiftBackup = null;
+    this.selectedViewDate = getLocalDateString(0);
     this.init();
   }
 
@@ -2089,6 +2160,334 @@ class StateStore {
       avgDailySpend: avgSpend,
       habitAdherenceRate: habitAdherence,
       dailyRecords: last7
+    };
+  }
+
+  // =========================================================================
+  // v2.2 PRO MAX ULTRA — RETROSPECTIVE CHRONO-STRIP & LIFE TEMPLATES
+  // =========================================================================
+
+  /**
+   * Set the currently inspected view date (for retrospective day browsing)
+   */
+  setSelectedViewDate(dateString) {
+    this.selectedViewDate = dateString || getLocalDateString(0);
+    this.notify();
+    return this.selectedViewDate;
+  }
+
+  /**
+   * Get the currently inspected view date
+   */
+  getSelectedViewDate() {
+    return this.selectedViewDate || getLocalDateString(0);
+  }
+
+  /**
+   * Toggle completion of a habit for a specific date (enables retrospective logging)
+   */
+  toggleHabitForDate(habitId, targetDateString = getLocalDateString(0)) {
+    const habits = this.state.habits || [];
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) {
+      throw new Error(`[DailyCompass:Store] Habit "${habitId}" not found.`);
+    }
+
+    const completed = new Set(habit.completedDates || []);
+    if (completed.has(targetDateString)) {
+      completed.delete(targetDateString);
+    } else {
+      completed.add(targetDateString);
+    }
+
+    const sortedDates = Array.from(completed).sort();
+
+    // Recalculate streak
+    let streak = 0;
+    let checkOffset = 0;
+    while (true) {
+      const checkDate = getLocalDateString(-checkOffset);
+      if (completed.has(checkDate)) {
+        streak++;
+        checkOffset++;
+      } else {
+        if (checkOffset === 0) {
+          checkOffset++;
+          continue;
+        }
+        break;
+      }
+    }
+
+    const updated = {
+      ...habit,
+      completedDates: sortedDates,
+      streak
+    };
+
+    this.updateItem('habits', habitId, updated);
+    return updated;
+  }
+
+  /**
+   * Compute metrics for a specific historical date
+   */
+  getMetricsForDate(targetDateString) {
+    const state = this.getState();
+    const today = getLocalDateString(0);
+    const isToday = targetDateString === today;
+
+    const txs = state.cashTransactions || [];
+    const spent = txs
+      .filter((t) => t.date === targetDateString && t.type === 'expense')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+    const habits = state.habits || [];
+    const habitsDone = habits.filter((h) => (h.completedDates || []).includes(targetDateString)).length;
+
+    const archives = state.dailyArchives || [];
+    const archived = archives.find((a) => a.date === targetDateString);
+    const waterMl = archived ? archived.waterMl : isToday ? (state.hydration?.currentMl || 0) : 0;
+
+    return {
+      date: targetDateString,
+      isToday,
+      spent: Number(spent.toFixed(2)),
+      habitsDone,
+      habitsTotal: habits.length,
+      waterMl
+    };
+  }
+
+  /**
+   * Apply one of three research-backed Life-Setup Archetype Templates
+   */
+  applyLifeTemplate(templateId, mode = 'merge') {
+    const snapshot = this.createAutoSnapshot(`pre_template_${templateId}`);
+
+    const ARCHETYPES = {
+      'adhd-navigator': {
+        name: 'ADHD Focus Navigator',
+        settings: { dailyBudgetCap: 45, soundPreset: 'zen-bowl', streakShields: 3 },
+        batteryLevel: 60,
+        routines: [
+          {
+            id: 'routine-morning-adhd',
+            title: 'Morning Somatic Awakening',
+            start: '07:30',
+            startTime: '07:30',
+            end: '08:30',
+            endTime: '08:30',
+            category: 'wellness',
+            icon: '🌅',
+            color: '#60cd9b',
+            steps: [
+              { id: 'adhd-s1', order: 1, title: 'Drink 500ml water & take morning meds', durationMinutes: 10, isCompleted: false },
+              { id: 'adhd-s2', order: 2, title: '10-min sunlight exposure & gentle stretch', durationMinutes: 15, isCompleted: false },
+              { id: 'adhd-s3', order: 3, title: 'High-protein nourishing breakfast', durationMinutes: 30, isCompleted: false },
+              { id: 'adhd-s4', order: 4, title: 'Review today’s Focus Anchor', durationMinutes: 5, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-deep-1',
+            title: 'Deep Focus Sprint 1',
+            start: '09:30',
+            startTime: '09:30',
+            end: '11:30',
+            endTime: '11:30',
+            category: 'work',
+            icon: '🎯',
+            color: '#4a7bb0',
+            steps: [
+              { id: 'adhd-f1', order: 1, title: 'Clear desktop & open primary focus doc', durationMinutes: 5, isCompleted: false },
+              { id: 'adhd-f2', order: 2, title: 'Pomodoro Sprint 1 (Pink Rain ambient)', durationMinutes: 50, isCompleted: false },
+              { id: 'adhd-f3', order: 3, title: '15-min screen-free pacing break', durationMinutes: 15, isCompleted: false },
+              { id: 'adhd-f4', order: 4, title: 'Pomodoro Sprint 2 (Deep Execution)', durationMinutes: 50, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-lunch-reset',
+            title: 'Mid-Day Fuel & Brain Reset',
+            start: '12:30',
+            startTime: '12:30',
+            end: '13:30',
+            endTime: '13:30',
+            category: 'nourish',
+            icon: '🍲',
+            color: '#e5a960',
+            steps: [
+              { id: 'adhd-l1', order: 1, title: 'Mindful lunch away from screens', durationMinutes: 30, isCompleted: false },
+              { id: 'adhd-l2', order: 2, title: 'Screen-free walk in daylight', durationMinutes: 30, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-winddown-adhd',
+            title: 'Night Wind-Down & Magnesium',
+            start: '21:00',
+            startTime: '21:00',
+            end: '22:30',
+            endTime: '22:30',
+            category: 'wellness',
+            icon: '🌙',
+            color: '#bc8cff',
+            steps: [
+              { id: 'adhd-w1', order: 1, title: 'Dim blue lighting & take magnesium', durationMinutes: 15, isCompleted: false },
+              { id: 'adhd-w2', order: 2, title: 'Evening scratchpad gratitude dump', durationMinutes: 15, isCompleted: false },
+              { id: 'adhd-w3', order: 3, title: 'Calm reading & 4-7-8 breathing', durationMinutes: 60, isCompleted: false }
+            ]
+          }
+        ],
+        habits: [
+          { id: 'adhd-h1', title: '500ml Water Upon Waking', icon: '💧', category: 'wellness', frequency: 'daily', streak: 2, completedDates: [getLocalDateString(-1)] },
+          { id: 'adhd-h2', title: '15-min Outdoor Sunlight Exposure', icon: '☀️', category: 'wellness', frequency: 'daily', streak: 4, completedDates: [getLocalDateString(-1)] },
+          { id: 'adhd-h3', title: 'Take Daily Meds & Supplements', icon: '💊', category: 'wellness', frequency: 'daily', streak: 5, completedDates: [getLocalDateString(-1)] },
+          { id: 'adhd-h4', title: '4-7-8 Breath Calmer Check', icon: '🧘', category: 'wellness', frequency: 'daily', streak: 1, completedDates: [] },
+          { id: 'adhd-h5', title: 'Evening Ledger & Reflection Check', icon: '💳', category: 'finance', frequency: 'daily', streak: 3, completedDates: [getLocalDateString(-1)] }
+        ]
+      },
+      'freelance-pro': {
+        name: 'Remote Freelancer / Deep Worker',
+        settings: { dailyBudgetCap: 60, soundPreset: 'gentle-triad', streakShields: 2 },
+        batteryLevel: 100,
+        routines: [
+          {
+            id: 'routine-commute',
+            title: 'Virtual Commute & Coffee Walk',
+            start: '08:30',
+            startTime: '08:30',
+            end: '09:15',
+            endTime: '09:15',
+            category: 'movement',
+            icon: '🚶',
+            color: '#38bdf8',
+            steps: [
+              { id: 'free-c1', order: 1, title: 'Morning fresh air walk', durationMinutes: 25, isCompleted: false },
+              { id: 'free-c2', order: 2, title: 'Brew pour-over coffee & set top 3', durationMinutes: 20, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-client-deep',
+            title: 'Deep Client Delivery Block',
+            start: '09:45',
+            startTime: '09:45',
+            end: '12:45',
+            endTime: '12:45',
+            category: 'work',
+            icon: '💻',
+            color: '#4a7bb0',
+            steps: [
+              { id: 'free-d1', order: 1, title: 'Client milestone deep execution', durationMinutes: 120, isCompleted: false },
+              { id: 'free-d2', order: 2, title: 'Commit code & draft review notes', durationMinutes: 60, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-shutdown',
+            title: 'Hard Shutdown & Desk Clearance',
+            start: '17:00',
+            startTime: '17:00',
+            end: '17:30',
+            endTime: '17:30',
+            category: 'routine',
+            icon: '🛑',
+            color: '#e5a960',
+            steps: [
+              { id: 'free-s1', order: 1, title: 'Close all browser work tabs', durationMinutes: 10, isCompleted: false },
+              { id: 'free-s2', order: 2, title: 'Clear workspace desk surface', durationMinutes: 10, isCompleted: false },
+              { id: 'free-s3', order: 3, title: 'Log billable expenses & close', durationMinutes: 10, isCompleted: false }
+            ]
+          }
+        ],
+        habits: [
+          { id: 'free-h1', title: 'Log All Billable Expenses', icon: '🧾', category: 'finance', frequency: 'daily', streak: 3, completedDates: [getLocalDateString(-1)] },
+          { id: 'free-h2', title: 'Stand & Hydrate Every 90m', icon: '💧', category: 'wellness', frequency: 'daily', streak: 6, completedDates: [getLocalDateString(-1)] },
+          { id: 'free-h3', title: 'Review Invoices & Debts', icon: '💳', category: 'finance', frequency: 'daily', streak: 2, completedDates: [] }
+        ]
+      },
+      'gentle-recovery': {
+        name: 'Gentle Recovery / Low Spoon',
+        settings: { dailyBudgetCap: 30, soundPreset: 'zen-bowl', streakShields: 5 },
+        batteryLevel: 20,
+        routines: [
+          {
+            id: 'routine-soft-awake',
+            title: 'Soft Awakening & Warm Tea',
+            start: '08:30',
+            startTime: '08:30',
+            end: '09:30',
+            endTime: '09:30',
+            category: 'wellness',
+            icon: '☕',
+            color: '#60cd9b',
+            steps: [
+              { id: 'rec-a1', order: 1, title: 'Warm herbal tea in bed', durationMinutes: 30, isCompleted: false },
+              { id: 'rec-a2', order: 2, title: 'Gentle breath & zero-rush morning', durationMinutes: 30, isCompleted: false }
+            ]
+          },
+          {
+            id: 'routine-rest-hour',
+            title: 'Restorative Afternoon Pause',
+            start: '14:30',
+            startTime: '14:30',
+            end: '16:00',
+            endTime: '16:00',
+            category: 'rest',
+            icon: '🌿',
+            color: '#bc8cff',
+            steps: [
+              { id: 'rec-r1', order: 1, title: 'Tibetan singing bowls calm audio', durationMinutes: 45, isCompleted: false },
+              { id: 'rec-r2', order: 2, title: 'Cozy weighted blanket pause', durationMinutes: 45, isCompleted: false }
+            ]
+          }
+        ],
+        habits: [
+          { id: 'rec-h1', title: 'Gentle 1.5L Hydration Pace', icon: '💧', category: 'wellness', frequency: 'daily', streak: 1, completedDates: [] },
+          { id: 'rec-h2', title: 'Zero-Guilt Rest Interval', icon: '🌿', category: 'wellness', frequency: 'daily', streak: 5, completedDates: [getLocalDateString(-1)] },
+          { id: 'rec-h3', title: 'Gentle 5-min Somatic Stretch', icon: '🌸', category: 'wellness', frequency: 'daily', streak: 2, completedDates: [getLocalDateString(-1)] }
+        ]
+      }
+    };
+
+    const template = ARCHETYPES[templateId];
+    if (!template) {
+      throw new Error(`[DailyCompass:Store] Unknown template archetype: "${templateId}"`);
+    }
+
+    if (mode === 'replace') {
+      this.updateModule('settings', (s) => ({ ...s, ...template.settings }));
+      this.updateModule('routines', template.routines);
+      this.updateModule('habits', template.habits);
+      this.setEnergyLevel(template.batteryLevel);
+    } else {
+      // Non-destructive merge
+      this.updateModule('settings', (s) => ({ ...s, ...template.settings }));
+      this.setEnergyLevel(template.batteryLevel);
+
+      const curRoutines = this.state.routines || [];
+      const curRoutineIds = new Set(curRoutines.map((r) => r.id));
+      const newRoutines = [...curRoutines];
+      template.routines.forEach((r) => {
+        if (!curRoutineIds.has(r.id)) {
+          newRoutines.push(r);
+        }
+      });
+      this.updateModule('routines', newRoutines);
+
+      const curHabits = this.state.habits || [];
+      const curHabitTitles = new Set(curHabits.map((h) => h.title.toLowerCase()));
+      const newHabits = [...curHabits];
+      template.habits.forEach((h) => {
+        if (!curHabitTitles.has(h.title.toLowerCase())) {
+          newHabits.push(h);
+        }
+      });
+      this.updateModule('habits', newHabits);
+    }
+
+    return {
+      success: true,
+      templateId,
+      templateName: template.name,
+      snapshotId: snapshot.id
     };
   }
 }

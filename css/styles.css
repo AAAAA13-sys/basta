@@ -2403,3 +2403,222 @@ body.gentle-mode-active .gentle-mode-banner {
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+/* ==========================================================================
+   v2.2 PRO MAX ULTRA — VOICE DICTATION & SENSORY GLOW
+   ========================================================================== */
+
+@keyframes calm-voice-breath {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(188, 140, 255, 0.25), 0 0 25px rgba(96, 205, 155, 0.15);
+    border-color: rgba(188, 140, 255, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(188, 140, 255, 0.45), 0 0 35px rgba(96, 205, 155, 0.30);
+    border-color: rgba(96, 205, 155, 0.65);
+    transform: scale(1.04);
+  }
+}
+
+.btn-voice-dictation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-calm);
+}
+
+.btn-voice-dictation:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-muted);
+}
+
+.btn-voice-dictation.recording {
+  background-color: rgba(188, 140, 255, 0.15);
+  color: #d2a8ff;
+  border-color: #bc8cff;
+  animation: calm-voice-breath 2.4s infinite ease-in-out;
+}
+
+.voice-transcript-banner {
+  display: none;
+  background-color: rgba(188, 140, 255, 0.12);
+  border: 1px solid rgba(188, 140, 255, 0.35);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-top: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.voice-transcript-banner.show {
+  display: flex;
+}
+
+/* ==========================================================================
+   v2.2 PRO MAX ULTRA — 7-DAY ROLLING CHRONO-STRIP
+   ========================================================================== */
+
+.chrono-strip-wrapper {
+  margin-bottom: 20px;
+}
+
+.chrono-strip-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+}
+
+@media (max-width: 640px) {
+  .chrono-strip-container {
+    overflow-x: auto;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+  }
+  .chrono-day-chip {
+    min-width: 62px;
+    flex-shrink: 0;
+  }
+}
+
+.chrono-day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-canvas-subtle);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-calm);
+  position: relative;
+}
+
+.chrono-day-chip:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-muted);
+}
+
+.chrono-day-chip.active {
+  background-color: var(--accent-cobalt-bg);
+  border-color: var(--accent-cobalt);
+}
+
+.chrono-day-chip.today {
+  border-color: var(--accent-sage-border);
+}
+
+.chrono-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.chrono-day-chip.active .chrono-day-name {
+  color: var(--accent-cobalt-soft);
+}
+
+.chrono-day-number {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  margin: 2px 0;
+}
+
+.chrono-dot-row {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.chrono-micro-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--border-muted);
+}
+
+.chrono-micro-dot.done {
+  background-color: var(--accent-sage);
+  box-shadow: 0 0 6px rgba(96, 205, 155, 0.4);
+}
+
+.chrono-micro-dot.partial {
+  background-color: var(--accent-cobalt);
+}
+
+.retro-inspection-banner {
+  display: none;
+  background-color: var(--accent-amber-bg);
+  border: 1px solid var(--accent-amber-border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  color: var(--accent-amber-soft);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.retro-inspection-banner.show {
+  display: flex;
+}
+
+/* ==========================================================================
+   v2.2 PRO MAX ULTRA — LIFE-SETUP TEMPLATES MODAL
+   ========================================================================== */
+
+.template-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.template-archetype-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  background-color: var(--bg-card-raised, #323a4d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-calm);
+}
+
+.template-archetype-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--accent-cobalt);
+  transform: translateY(-2px);
+}
+
+.template-badge-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  margin-bottom: 8px;
+}

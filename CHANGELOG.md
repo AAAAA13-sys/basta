@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-11-05
+
+### 🚀 Major Feature Release: v2.2.0 Pro Max Ultra
+
+Daily Compass v2.2.0 ("Pro Max Ultra") expands the cognitive scaffolding system into three high-impact sensory and temporal domains: Native Web Speech Recognition Audio Dictation ("Voice Scratchpad"), a 7-Day Rolling Chrono-Strip Runway with Retrospective Day Inspection, and Curated Life-Setup Archetype Templates with 1-click snapshot rollback protection.
+
+### Added
+
+#### 1. Native Web Speech Recognition Audio Dictation ("Voice Scratchpad")
+- **100% Client-Side Voice Capture:** Zero audio leaves the user's device; leverages standard browser `SpeechRecognition` / `webkitSpeechRecognition` APIs with zero external libraries or cloud subscriptions.
+- **Client-Side Normalization Pipeline (`normalizeSpokenTranscript`):**
+  - Spoken punctuation mapping: replaces spoken keywords (*"period"*, *"comma"*, *"question mark"*, *"exclamation point"*, *"new line"*) with proper typographic punctuation marks.
+  - Sentence-start and newline capitalization, abbreviation preservation (`ADHD`, `PWA`, `JSON`, `API`, `USD`), and standalone pronoun *"I"* capitalization.
+- **Semantic Intent Auto-Tagger (`inferScratchpadTag`):** Scans spoken transcript for keyword triggers to categorize thoughts automatically into `#To-Buy`, `#To-Do`, `#Idea`, `#Later`, and `#Thought`.
+- **Sensory Ergonomics & Calming UI:**
+  - Non-jarring, gentle breathing lavender/mint sine pulse animation (`@keyframes calm-voice-breath`) replaces alarming red recording dots.
+  - Real-time interim transcript preview banner with 1-tap cancel/stop controls.
+  - Seamless auto-save to Scratchpad with gentle `zen-bowl` completion chime.
+  - Ergonomic access via top header button, Scratchpad modal button, `Alt + V` global hotkey, and `+voice` Omnibar command.
+  - Compassionate permission handling: non-punitive gentle notice when microphone access is resting.
+
+#### 2. 7-Day Rolling Chrono-Strip Runway & Retrospective Day Inspection
+- **7-Day Rolling Temporal Strip:** Interactive horizontal runway displaying 7 continuous days ($T-6 \dots T_0$) directly below the cockpit header.
+- **Micro-Dot Telemetry:** Each day chip displays day-of-week, calendar date, completion status dot (empty, cobalt for partial, sage for 100%), and daily spend badge.
+- **Retrospective Inspection Mode:**
+  - Tapping past days shifts the cockpit view into historical inspection mode.
+  - Sticky amber banner (`#retro-inspection-banner`) indicates the date under inspection with 1-tap return to the present (`#btn-return-today`).
+- **Non-Punitive Self-Healing Habit Streaks (`toggleHabitForDate`):**
+  - Users who fall asleep before checking habits can inspect yesterday ($T-1$) and log them without penalty.
+  - Habit chain automatically self-heals backwards from today, updating `streak` without consuming a Streak Shield!
+- **Historical Metrics Calculation (`getMetricsForDate`):** Instant historical metrics computation for spending and habit adherence.
+- **Omnibar Command:** `+today` snaps the Chrono-Strip back to the current day.
+
+#### 3. Curated Life-Setup Archetype Templates
+- **3 Neurodivergent-Grounded Turnkey Cockpits:**
+  - **ADHD Focus Navigator:** Dopamine-paced time blocks, 25m Pomodoro sprints, mid-day sensory walk, 432 Hz Zen Bowl audio, 5 core habits, and a $45 daily budget cap.
+  - **Remote Freelancer:** Work-from-home boundary defense, virtual commute walks, deep client execution blocks, gentle triad audio, and 17:00 hard tab shutdowns.
+  - **Gentle Recovery (Low Spoon):** Burnout and chronic fatigue pacing, 20% Gentle Mode by default, 432 Hz Tibetan Drone audio, and zero-guilt restorative micro-actions.
+- **Safe Merge Protocol (`applyLifeTemplate`):**
+  - Imports archetype routines and habits while strictly preserving all existing transactions, debts, scratchpad notes, and medications.
+  - Creates an automatic snapshot checkpoint (`pre_archetype_install`) before applying, enabling instant 1-click rollback.
+- **Accessible Cockpit Trigger:** Modal 15 (`#modal-life-templates`) accessible from header grid icon, Quick Start panel, or `+template` Omnibar command.
+
+#### 4. Service Worker Cache Elevation
+- Upgraded offline cache manifest in `sw.js` to `daily-compass-v2.2.0` for instant, reliable offline PWA operation.
+
+---
+
+### 🧪 Automated Testing Suite (61/61 Tests Passing)
+
+All subsystems and edge cases are verified with 61 automated tests running natively on Node.js (`node:test`) across 11 suites with 0 failures:
+
+```bash
+node --test tests/test_subsystems.js tests/test_full_suite.js
+```
+
+#### Test Suite Breakdown (11 Suites, 61 Assertions, 0 Failures):
+- **Suite 1: Store Initialization & Schemas (5 tests)**
+- **Suite 2: CRUD Operations & Reactivity (5 tests)**
+- **Suite 3: Calculation Logic (7 tests)**
+- **Suite 4: Export & Import Portability (3 tests)**
+- **Suite 5: Edge Cases & Resilience (6 tests)**
+- **Suite 6: Web Audio Sound Synthesizer (4 tests)**
+- **Suite 7: v2.0 Pro Max Expansion Subsystems (7 tests)**
+- **Suite 8: v2.1 Pro Max Plus Subsystems (6 tests)**
+- **Suite 9: v2.2 Pro Max Ultra Subsystems (7 tests)**
+  - *Speech Normalization: spoken punctuation conversion*
+  - *Speech Normalization: sentence & pronoun casing*
+  - *Intent Auto-Tagger: #To-Buy, #To-Do, #Idea, #Later, #Thought heuristics*
+  - *Rolling Chrono-Strip: date inspection state tracking*
+  - *Retrospective Habits: retroactive completion & streak self-healing*
+  - *Retrospective Metrics: historical spend & habit adherence*
+  - *Life Templates: Safe Merge mode data preservation*
+- **Suite 10: Store Subsystem Baseline (7 tests)**
+- **Suite 11: Audio Subsystem Baseline (4 tests)**
+
+---
+
 ## [2.1.0] - 2026-11-05
 
 ### 🚀 Major Feature Release: v2.1.0 Pro Max Plus

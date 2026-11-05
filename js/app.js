@@ -340,7 +340,23 @@ const dom = {
   journalPreviewText: document.getElementById('journal-preview-text'),
   btnCopyJournalClipboard: document.getElementById('btn-copy-journal-clipboard'),
   btnDownloadJournalMd: document.getElementById('btn-download-journal-md'),
-  btnDownloadLedgerCsv: document.getElementById('btn-download-ledger-csv')
+  btnDownloadLedgerCsv: document.getElementById('btn-download-ledger-csv'),
+
+  // Voice Dictation & Chrono-Strip (v2.2 Pro Max Ultra)
+  btnHeaderVoice: document.getElementById('btn-header-voice'),
+  btnHeaderTemplates: document.getElementById('btn-header-templates'),
+  retroInspectionBanner: document.getElementById('retro-inspection-banner'),
+  retroInspectedDateLabel: document.getElementById('retro-inspected-date-label'),
+  btnReturnToday: document.getElementById('btn-return-today'),
+  chronoStripDays: document.getElementById('chrono-strip-days'),
+  btnScratchVoice: document.getElementById('btn-scratch-voice'),
+  voiceBtnLabel: document.getElementById('voice-btn-label'),
+  voiceTranscriptBanner: document.getElementById('voice-transcript-banner'),
+  voiceTranscriptText: document.getElementById('voice-transcript-text'),
+  btnVoiceCancel: document.getElementById('btn-voice-cancel'),
+  modalLifeTemplates: document.getElementById('modal-life-templates'),
+  btnCloseTemplates: document.getElementById('btn-close-templates'),
+  btnOpenTemplatesModal: document.getElementById('btn-open-templates-modal')
 };
 
 // ==========================================================================
@@ -815,6 +831,41 @@ function renderOmnibarResults(query = '') {
     });
   }
 
+  // v2.2 Pro Max Ultra Omnibar Actions
+  if (q.startsWith('+voice') || q === 'voice' || q === 'speak') {
+    results.push({
+      title: 'Start Voice Dictation (Voice Scratchpad)',
+      badge: 'Sensory Voice',
+      action: () => {
+        closeOmnibar();
+        startVoiceDictation();
+      }
+    });
+  }
+
+  if (q.startsWith('+template') || q === 'templates' || q === 'starter') {
+    results.push({
+      title: 'Open Starter Cockpits & Life Templates',
+      badge: 'Blueprints',
+      action: () => {
+        closeOmnibar();
+        openTemplatesModal();
+      }
+    });
+  }
+
+  if (q.startsWith('+today') || q === 'today' || q === 'now') {
+    results.push({
+      title: 'Snap Chrono-Strip Back to Today',
+      badge: 'Time Travel',
+      action: () => {
+        closeOmnibar();
+        store.setSelectedViewDate(getTodayDateString());
+        soundEngine.playPreset('micro-tick');
+      }
+    });
+  }
+
   // Cross-Module Search: Habits, Debts, Scratchpad, Routines
   (state.habits || []).forEach((h) => {
     if (!q || h.title.toLowerCase().includes(q)) {
@@ -893,6 +944,7 @@ function showShiftUndoToast(msg) {
 // ==========================================================================
 function renderAll() {
   const state = store.getState();
+  renderChronoStrip(state);
   renderEnergyBattery(state);
   renderHydrationAndMeds(state);
   renderAnchorAndToday(state);
@@ -1312,8 +1364,9 @@ function renderHabitsAndHeatmap(state) {
     if (habits.length === 0) {
       dom.habitsListGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 24px; color: var(--text-muted);">No habits added yet.</div>`;
     } else {
+      const viewDate = store.getSelectedViewDate ? store.getSelectedViewDate() : todayStr;
       dom.habitsListGrid.innerHTML = habits.map((h) => {
-        const isCompleted = h.completedDates && h.completedDates.includes(todayStr);
+        const isCompleted = h.completedDates && h.completedDates.includes(viewDate);
         const streak = h.streak || 0;
 
         return `
@@ -1722,6 +1775,203 @@ function downloadFile(filename, content, type = 'text/markdown;charset=utf-8;') 
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ==========================================================================
+// v2.2 PRO MAX ULTRA SUBSYSTEM CONTROLLERS
+// ==========================================================================
+
+// --- 1. Chrono-Strip Runway & Retrospective Inspection ---
+function renderChronoStrip(state) {
+  if (!dom.chronoStripDays) return;
+  const todayStr = getTodayDateString();
+  const selectedDate = store.getSelectedViewDate ? store.getSelectedViewDate() : todayStr;
+  const isRetro = selectedDate !== todayStr;
+
+  // Retrospective Banner update
+  if (dom.retroInspectionBanner) {
+    dom.retroInspectionBanner.classList.toggle('show', isRetro);
+    if (dom.retroInspectedDateLabel) {
+      const isYesterday = selectedDate === getLocalDateString(-1);
+      dom.retroInspectedDateLabel.textContent = isYesterday
+        ? `Yesterday (${selectedDate})`
+        : selectedDate;
+    }
+  }
+
+  // 7 Rolling Day Chips: D-6 to D-0 (Today)
+  const dayOffsets = [-6, -5, -4, -3, -2, -1, 0];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  dom.chronoStripDays.innerHTML = dayOffsets.map((offset) => {
+    const dStr = getLocalDateString(offset);
+    const dObj = new Date(dStr + 'T12:00:00');
+    const dayName = offset === 0 ? '★ Today' : offset === -1 ? 'Yesterday' : dayNames[dObj.getDay()];
+    const dayNum = dObj.getDate();
+    const isActive = dStr === selectedDate;
+    const isToday = offset === 0;
+
+    const metrics = store.getMetricsForDate ? store.getMetricsForDate(dStr) : null;
+    const habitsCompleted = metrics ? metrics.habitsCompleted : 0;
+    const habitsTotal = metrics ? metrics.habitsTotal : 0;
+    const isHabitAllDone = habitsTotal > 0 && habitsCompleted >= habitsTotal;
+    const isHabitPartial = habitsCompleted > 0 && !isHabitAllDone;
+
+    return `
+      <div class="chrono-day-chip ${isActive ? 'active' : ''} ${isToday ? 'today' : ''}" data-date="${dStr}" title="${dStr}: ${habitsCompleted}/${habitsTotal} habits">
+        <div class="chrono-day-name">${dayName}</div>
+        <div class="chrono-day-number">${dayNum}</div>
+        <div class="chrono-dot-row">
+          <span class="chrono-micro-dot ${isHabitAllDone ? 'done' : isHabitPartial ? 'partial' : ''}"></span>
+        </div>
+        ${metrics && metrics.spent > 0 ? `<div style="font-size: 10px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">$${metrics.spent.toFixed(0)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// --- 2. Sensory Voice Scratchpad (Web Speech API) ---
+let speechRecognitionInstance = null;
+let isVoiceDictating = false;
+
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    isVoiceDictating = true;
+    updateVoiceUI(true);
+    soundEngine.playPreset('micro-tick');
+  };
+
+  recognition.onresult = (event) => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    const currentText = finalTranscript || interimTranscript;
+    if (dom.voiceTranscriptText && currentText) {
+      dom.voiceTranscriptText.textContent = `🎙️ "${currentText}"`;
+    }
+    if (dom.scratchpadInput && interimTranscript) {
+      dom.scratchpadInput.placeholder = `Listening: "${interimTranscript}"...`;
+    }
+
+    if (finalTranscript) {
+      const cleanText = store.normalizeSpokenTranscript ? store.normalizeSpokenTranscript(finalTranscript) : finalTranscript.trim();
+      const tag = store.inferScratchpadTag ? store.inferScratchpadTag(cleanText) : 'thought';
+
+      store.addScratchpadItem(cleanText, tag);
+      soundEngine.playPreset('zen-bowl');
+
+      if (dom.scratchpadInput) {
+        dom.scratchpadInput.value = '';
+        dom.scratchpadInput.placeholder = 'Brain dump anything... (Press Enter or click Save)';
+      }
+      if (dom.voiceTranscriptText) {
+        dom.voiceTranscriptText.textContent = `✨ Saved note #${tag}: "${cleanText.slice(0, 36)}${cleanText.length > 36 ? '...' : ''}"`;
+      }
+      setTimeout(() => {
+        stopVoiceDictation();
+      }, 1500);
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.warn('Speech recognition status:', event.error);
+    if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+      if (dom.voiceTranscriptText) {
+        dom.voiceTranscriptText.textContent = 'Microphone access paused. Voice dictation is optional.';
+      }
+    } else if (event.error === 'no-speech') {
+      if (dom.voiceTranscriptText) {
+        dom.voiceTranscriptText.textContent = 'No speech detected. Tap Speak to try again.';
+      }
+    }
+    setTimeout(() => {
+      stopVoiceDictation();
+    }, 1800);
+  };
+
+  recognition.onend = () => {
+    if (isVoiceDictating) {
+      stopVoiceDictation();
+    }
+  };
+
+  return recognition;
+}
+
+function updateVoiceUI(active) {
+  if (dom.btnHeaderVoice) dom.btnHeaderVoice.classList.toggle('recording', active);
+  if (dom.btnScratchVoice) dom.btnScratchVoice.classList.toggle('recording', active);
+  if (dom.voiceBtnLabel) dom.voiceBtnLabel.textContent = active ? 'Listening...' : 'Speak';
+  if (dom.voiceTranscriptBanner) {
+    dom.voiceTranscriptBanner.classList.toggle('active', active);
+    if (active && dom.voiceTranscriptText) {
+      dom.voiceTranscriptText.textContent = 'Listening... Speak your thought naturally';
+    }
+  }
+}
+
+function startVoiceDictation() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Voice Scratchpad is supported in modern browsers (Chrome, Edge, Safari). Standard keyboard entry is always ready.');
+    switchView('scratchpad');
+    if (dom.scratchpadInput) dom.scratchpadInput.focus();
+    return;
+  }
+
+  if (!speechRecognitionInstance) {
+    speechRecognitionInstance = initSpeechRecognition();
+  }
+
+  try {
+    switchView('scratchpad');
+    speechRecognitionInstance.start();
+  } catch (err) {
+    console.warn('Speech recognition start failed or already active:', err);
+  }
+}
+
+function stopVoiceDictation() {
+  isVoiceDictating = false;
+  updateVoiceUI(false);
+  if (speechRecognitionInstance) {
+    try {
+      speechRecognitionInstance.stop();
+    } catch (_) {}
+  }
+}
+
+function toggleVoiceDictation() {
+  if (isVoiceDictating) {
+    stopVoiceDictation();
+  } else {
+    startVoiceDictation();
+  }
+}
+
+// --- 3. Curated Life-Setup Archetype Templates ---
+function openTemplatesModal() {
+  if (dom.modalLifeTemplates) dom.modalLifeTemplates.classList.add('open');
+}
+
+function closeTemplatesModal() {
+  if (dom.modalLifeTemplates) dom.modalLifeTemplates.classList.remove('open');
 }
 
 // ==========================================================================
@@ -2139,33 +2389,33 @@ function setupEventListeners() {
   if (dom.btnCloseSettle) dom.btnCloseSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
   if (dom.btnCancelSettle) dom.btnCancelSettle.addEventListener('click', () => dom.modalSettleDebt.classList.remove('open'));
 
-  // Habits Check Toggle
+  // Habits Check Toggle (Supports Retrospective Inspection)
   if (dom.habitsListGrid) {
     dom.habitsListGrid.addEventListener('click', (e) => {
       const checkBtn = e.target.closest('.btn-check-habit');
       if (!checkBtn) return;
       const id = checkBtn.dataset.id;
-      const todayStr = getTodayDateString();
-      const state = store.getState();
-      const habit = (state.habits || []).find((h) => h.id === id);
+      const viewDate = store.getSelectedViewDate ? store.getSelectedViewDate() : getTodayDateString();
 
-      if (habit) {
-        let dates = habit.completedDates ? [...habit.completedDates] : [];
-        let streak = habit.streak || 0;
-
-        if (dates.includes(todayStr)) {
-          dates = dates.filter((d) => d !== todayStr);
-          streak = Math.max(0, streak - 1);
-        } else {
-          dates.push(todayStr);
-          streak += 1;
-          soundEngine.playPreset('micro-tick');
+      if (store.toggleHabitForDate) {
+        store.toggleHabitForDate(id, viewDate);
+        soundEngine.playPreset('micro-tick');
+      } else {
+        const state = store.getState();
+        const habit = (state.habits || []).find((h) => h.id === id);
+        if (habit) {
+          let dates = habit.completedDates ? [...habit.completedDates] : [];
+          let streak = habit.streak || 0;
+          if (dates.includes(viewDate)) {
+            dates = dates.filter((d) => d !== viewDate);
+            streak = Math.max(0, streak - 1);
+          } else {
+            dates.push(viewDate);
+            streak += 1;
+            soundEngine.playPreset('micro-tick');
+          }
+          store.updateItem('habits', id, { completedDates: dates, streak });
         }
-
-        store.updateItem('habits', id, {
-          completedDates: dates,
-          streak
-        });
       }
     });
   }
@@ -2647,12 +2897,75 @@ function setupEventListeners() {
     });
   }
 
+  // ==========================================================================
+  // v2.2 PRO MAX ULTRA EVENT LISTENERS
+  // ==========================================================================
+
+  // Chrono-Strip Runway Days & Retrospective Navigation
+  if (dom.chronoStripDays) {
+    dom.chronoStripDays.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chrono-day-chip');
+      if (!chip) return;
+      const targetDate = chip.dataset.date;
+      if (targetDate && store.setSelectedViewDate) {
+        store.setSelectedViewDate(targetDate);
+        soundEngine.playPreset('micro-tick');
+      }
+    });
+  }
+
+  if (dom.btnReturnToday) {
+    dom.btnReturnToday.addEventListener('click', () => {
+      if (store.setSelectedViewDate) {
+        store.setSelectedViewDate(getTodayDateString());
+        soundEngine.playPreset('micro-tick');
+      }
+    });
+  }
+
+  // Voice Scratchpad Dictation
+  if (dom.btnHeaderVoice) dom.btnHeaderVoice.addEventListener('click', toggleVoiceDictation);
+  if (dom.btnScratchVoice) dom.btnScratchVoice.addEventListener('click', toggleVoiceDictation);
+  if (dom.btnVoiceCancel) dom.btnVoiceCancel.addEventListener('click', stopVoiceDictation);
+
+  // Life Templates Modal
+  if (dom.btnHeaderTemplates) dom.btnHeaderTemplates.addEventListener('click', openTemplatesModal);
+  if (dom.btnOpenTemplatesModal) dom.btnOpenTemplatesModal.addEventListener('click', openTemplatesModal);
+  if (dom.btnCloseTemplates) dom.btnCloseTemplates.addEventListener('click', closeTemplatesModal);
+
+  if (dom.modalLifeTemplates) {
+    dom.modalLifeTemplates.addEventListener('click', (e) => {
+      const installBtn = e.target.closest('.btn-install-template');
+      if (!installBtn) return;
+      const templateId = installBtn.dataset.template;
+      if (!templateId) return;
+
+      if (confirm(`Install "${templateId}" blueprint in Safe Merge mode? (All your existing transactions, debts, notes, and medications are preserved. A snapshot checkpoint is saved automatically.)`)) {
+        try {
+          store.applyLifeTemplate(templateId, 'merge');
+          closeTemplatesModal();
+          soundEngine.playPreset('zen-bowl');
+          alert(`Blueprint "${templateId}" successfully installed! An automatic snapshot checkpoint was saved.`);
+        } catch (err) {
+          alert('Failed to install blueprint: ' + err.message);
+        }
+      }
+    });
+  }
+
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     // Quick Peek Privacy Toggle: Alt+P or Alt+M
     if ((e.altKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 'm' || e.key === 'M')) {
       e.preventDefault();
       togglePeekPrivacy();
+      return;
+    }
+
+    // Voice Dictation Quick Toggle: Alt+V
+    if ((e.altKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+      e.preventDefault();
+      toggleVoiceDictation();
       return;
     }
 
@@ -2737,7 +3050,7 @@ function init() {
   initServiceWorker();
   initDailyBaselineSnapshot();
 
-  console.log('Daily Compass v2.1 Pro Max Plus Operating System initialized.');
+  console.log('Daily Compass v2.2 Pro Max Ultra Operating System initialized.');
 }
 
 if (document.readyState === 'loading') {

@@ -1,7 +1,7 @@
 # 🏛️ Architecture & System Design
-# Project: "Daily Compass v2.1.0 Pro Max Plus"
+# Project: "Daily Compass v2.2.0 Pro Max Ultra"
 
-**Document Version:** 2.1.0 Pro Max Plus  
+**Document Version:** 2.2.0 Pro Max Ultra  
 **Target Environment:** Local-First Web Application / Offline Progressive Web App (PWA)  
 **Engineering Mindset:** Native Web Standards & Ponytail Simplicity  
 
@@ -9,7 +9,7 @@
 
 ## 1. System Overview & Architectural Vision
 
-Daily Compass v2.1.0 Pro Max Plus is engineered as a zero-dependency, local-first cognitive prosthetic and daily tracking cockpit. Its mission is to anchor disoriented, overwhelmed, or executive-dysfunctional users within 500 milliseconds of viewing the screen, while providing ultra-low tap friction ($\le 2$ taps) for all daily logging operations, complete peace of mind in public spaces via cryptographic privacy, and fluid temporal sculpting of routine blocks.
+Daily Compass v2.2.0 Pro Max Ultra is engineered as a zero-dependency, local-first cognitive prosthetic and daily tracking cockpit. Its mission is to anchor disoriented, overwhelmed, or executive-dysfunctional users within 500 milliseconds of viewing the screen, while providing ultra-low tap friction ($\le 2$ taps) for all daily logging operations, complete peace of mind in public spaces via cryptographic privacy, voice-driven thought capture with zero cloud egress, and a non-punitive 7-day retrospective timeline that self-heals habit momentum.
 
 ### High-Level Subsystem Topology
 
@@ -17,6 +17,10 @@ Daily Compass v2.1.0 Pro Max Plus is engineered as a zero-dependency, local-firs
 flowchart TD
     subgraph UI_Layer["User Interface & Viewport (Single Page Cockpit)"]
         Clock["Master Clock & Day Progress"]
+        ChronoStrip["7-Day Rolling Chrono-Strip Runway"]
+        RetroBanner["Retrospective Day Inspection Banner"]
+        VoiceBanner["Voice Transcript Preview Banner"]
+        TemplatesModal["Curated Life Archetype Modal (3 Presets)"]
         Routine["Active Routine & Next Micro-Step"]
         EditorUI["Routine Block & Micro-Step Editor Modal"]
         ShiftBar["Schedule Quick-Shift Bar (+15m, +30m, +1h)"]
@@ -40,7 +44,9 @@ flowchart TD
     end
 
     subgraph Controller_Layer["Application Controller (js/app.js)"]
-        Router["View Router & Global Shortcuts (Cmd+K, Alt+M, F, E)"]
+        Router["View Router & Global Shortcuts (Cmd+K, Alt+M, Alt+V, F, E)"]
+        ChronoEngine["Chrono-Strip & Retrospective View Switcher"]
+        SpeechEngine["SpeechRecognition Lifecycle & Transcript Streamer"]
         ClockEngine["1-Second Master Clock & Routine Matcher"]
         RoutineManager["Routine Block CRUD & Step Normalizer"]
         PrivacyManager["Mask Mode & PIN Vault Verification Controller"]
@@ -66,6 +72,9 @@ flowchart TD
         PubSub["Observer / Event Bus (Listeners Set)"]
         Sanitizer["Schema Sanitizer & Migration Pipeline"]
         CryptoEngine["Web Crypto SHA-256 + Salt Verifier (with Fallback)"]
+        VoiceNormalizer["Spoken Punctuation Normalizer & Intent Tagger"]
+        RetroEngine["Retrospective Habit Logger & Unbroken Streak Healing"]
+        TemplateInstaller["Safe Merge Archetype Blueprint Engine"]
         CalcEngine["Financial, Debt & Buffer Forecasting Engine"]
         JournalEngine["Markdown Journal & CSV Export Formatter"]
         ArchiveEngine["Daily Metric Archiving & Trend Averages"]

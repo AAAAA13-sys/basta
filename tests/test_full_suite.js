@@ -180,7 +180,7 @@ global.window = {
 global.AudioContext = MockAudioContext;
 
 // Import application modules
-const { store, STORAGE_KEY, DEFAULT_STATE, getLocalDateString, generateId } = await import('../js/store.js');
+const { store, STORAGE_KEY, DEFAULT_STATE, getLocalDateString, generateId, normalizeSpokenTranscript, inferScratchpadTag } = await import('../js/store.js');
 const { soundEngine, audio } = await import('../js/audio.js');
 
 // ============================================================================
@@ -1116,5 +1116,97 @@ describe('Suite 8: v2.1 Pro Max Plus Subsystems', () => {
     assert.strictEqual(typeof trends.avgWaterMl, 'number');
     assert.strictEqual(typeof trends.avgDailySpend, 'number');
     assert.strictEqual(typeof trends.habitAdherenceRate, 'number');
+  });
+});
+
+// ============================================================================
+// TEST SUITE 9: v2.2 PRO MAX ULTRA SUBSYSTEMS
+// ============================================================================
+
+describe('Suite 9: v2.2 Pro Max Ultra Subsystems', () => {
+  test('Speech Normalization: converts spoken punctuation words into proper punctuation marks', () => {
+    const raw = 'Remember to call Dr Smith period Pick up magnesium comma and warm tea question mark';
+    const cleaned = normalizeSpokenTranscript(raw);
+    assert.strictEqual(cleaned, 'Remember to call Dr Smith. Pick up magnesium, and warm tea?');
+  });
+
+  test('Speech Normalization: capitalizes sentence beginnings and standalone pronoun I', () => {
+    const raw = 'today was productive. i drank two liters of water. i feel grounded!';
+    const cleaned = normalizeSpokenTranscript(raw);
+    assert.strictEqual(cleaned, 'Today was productive. I drank two liters of water. I feel grounded!');
+  });
+
+  test('Intent Auto-Tagger: correctly infers #To-Buy, #To-Do, #Idea, #Later, and #Thought', () => {
+    assert.strictEqual(inferScratchpadTag('Buy almond milk at grocery store').tag, 'To-Buy');
+    assert.strictEqual(inferScratchpadTag('Remember to email invoice to client').tag, 'To-Do');
+    assert.strictEqual(inferScratchpadTag('What if we add an ambient sound loop?').tag, 'Idea');
+    assert.strictEqual(inferScratchpadTag('Someday we will travel to Iceland').tag, 'Later');
+    assert.strictEqual(inferScratchpadTag('Feeling overwhelmed by the sensory noise').tag, 'Reflection');
+    assert.strictEqual(inferScratchpadTag('Gentle walk in the afternoon sun').tag, 'Thought');
+  });
+
+  test('Rolling Chrono-Strip: setSelectedViewDate and getSelectedViewDate track inspected date', () => {
+    const today = getLocalDateString(0);
+    assert.strictEqual(store.getSelectedViewDate(), today);
+
+    const yesterday = getLocalDateString(-1);
+    store.setSelectedViewDate(yesterday);
+    assert.strictEqual(store.getSelectedViewDate(), yesterday);
+
+    // Reset back to today
+    store.setSelectedViewDate(today);
+    assert.strictEqual(store.getSelectedViewDate(), today);
+  });
+
+  test('Retrospective Habits: toggleHabitForDate updates past day completion without breaking streak graph', () => {
+    const habit = store.getState().habits[0];
+    const targetDay = getLocalDateString(-5);
+
+    // Initial state: targetDay is not in completedDates
+    assert.strictEqual(habit.completedDates.includes(targetDay), false);
+
+    // Toggle targetDay on
+    const updated = store.toggleHabitForDate(habit.id, targetDay);
+    assert.ok(updated.completedDates.includes(targetDay));
+    assert.ok(typeof updated.streak === 'number');
+
+    // Toggle targetDay off
+    const reverted = store.toggleHabitForDate(habit.id, targetDay);
+    assert.strictEqual(reverted.completedDates.includes(targetDay), false);
+  });
+
+  test('Retrospective Metrics: getMetricsForDate calculates historical spend and habits accurately', () => {
+    const today = getLocalDateString(0);
+    const metrics = store.getMetricsForDate(today);
+    assert.strictEqual(metrics.date, today);
+    assert.strictEqual(metrics.isToday, true);
+    assert.strictEqual(typeof metrics.spent, 'number');
+    assert.strictEqual(typeof metrics.habitsDone, 'number');
+    assert.strictEqual(typeof metrics.waterMl, 'number');
+  });
+
+  test('Life Templates: applyLifeTemplate installs template in merge mode preserving existing debts and transactions', () => {
+    // Ensure existing debt and transaction exist
+    const initialDebtCount = store.getState().debts.length;
+    const initialTxCount = store.getState().cashTransactions.length;
+
+    // Apply 'adhd-navigator'
+    const res = store.applyLifeTemplate('adhd-navigator', 'merge');
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(res.templateName, 'ADHD Focus Navigator');
+    assert.ok(res.snapshotId);
+
+    // Settings updated
+    assert.strictEqual(store.getState().settings.dailyBudgetCap, 45);
+    assert.strictEqual(store.getState().settings.soundPreset, 'zen-bowl');
+
+    // Data preserved
+    assert.strictEqual(store.getState().debts.length, initialDebtCount);
+    assert.strictEqual(store.getState().cashTransactions.length, initialTxCount);
+
+    // 1-Click Rollback via snapshot
+    const rolledBack = store.restoreAutoSnapshot(res.snapshotId);
+    assert.strictEqual(rolledBack, true);
+    assert.strictEqual(store.getState().settings.dailyBudgetCap, 50); // Default restored
   });
 });

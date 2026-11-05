@@ -1,13 +1,13 @@
 # 🧭 Daily Compass
 
-> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit (v2.1.0 Pro Max Plus)**  
+> **The Zero-Overwhelm Cognitive Grounding & Daily Life Cockpit (v2.2.0 Pro Max Ultra)**  
 > *Engineered for ADHD, time blindness, executive dysfunction, and sensory sensitivity.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version: v2.1.0 Pro Max Plus](https://img.shields.io/badge/Version-v2.1.0%20Pro%20Max%20Plus-indigo.svg)](CHANGELOG.md)
+[![Version: v2.2.0 Pro Max Ultra](https://img.shields.io/badge/Version-v2.2.0%20Pro%20Max%20Ultra-indigo.svg)](CHANGELOG.md)
 [![Zero Dependencies](https://img.shields.io/badge/Runtime%20Dependencies-0-success.svg)](package.json)
 [![Offline First](https://img.shields.io/badge/Architecture-Local--First%20PWA-brightgreen.svg)](sw.js)
-[![Tests Passing](https://img.shields.io/badge/Node.js%20Tests-54%2F54%20Pass-brightgreen.svg)](tests/test_full_suite.js)
+[![Tests Passing](https://img.shields.io/badge/Node.js%20Tests-61%2F61%20Pass-brightgreen.svg)](tests/test_full_suite.js)
 
 ---
 
@@ -18,13 +18,15 @@ Most productivity suites fail the people who need them most. When you live with 
 - **Deep multi-screen forms** create cognitive friction and decision paralysis.
 - **Jarring klaxon alarms** induce cortisol spikes and panic.
 - **Fragmented tools** (separate apps for alarms, habits, hydration, meds, spending, notes) force constant context-switching, evaporating your fragile working memory.
+- **Falling asleep without logging habits** shatters streaks on traditional apps, provoking morning defeat.
 - **Shoulder-surfing anxiety in public** (coffee shops, public transit, shared offices) prevents you from opening financial ledgers and private brain dumps.
 
-**Daily Compass v2.1.0 Pro Max Plus** is an all-in-one cognitive prosthetic and daily life dashboard. Built from the ground up as an unshakeable ground truth, it anchors you into the present moment within 500 milliseconds of looking at the screen.
+**Daily Compass v2.2.0 Pro Max Ultra** is an all-in-one cognitive prosthetic and daily life dashboard. Built from the ground up as an unshakeable ground truth, it anchors you into the present moment within 500 milliseconds of looking at the screen.
 
 ```
 +-----------------------------------------------------------------------------------------------+
-| [🧭 Daily Compass]  14:23:10 Wed, Nov 5  [⚡ 60% Spoon]  [👁️ Peek Privacy]  [Cmd+K Omnibar]     |
+| [🧭 Daily Compass]  14:23:10 Wed, Nov 5  [⚡ 60% Spoon]  [🎙️ Voice]  [🧩 Cockpits]  [Cmd+K]     |
+| 📅 7-DAY CHRONO-STRIP: [Thu 30] [Fri 31] [Sat 1] [Sun 2] [Mon 3] [Tue 4] [★ Wed 5 (TODAY)]    |
 | CURRENT BLOCK: Afternoon Deep Focus (Ends in 37m)   [NEXT: Stretch & Hydrate]                 |
 | [⏳ Shift Schedule:  +15m  |  +30m  |  +1h  |  Snap to Now ]   [✏️ Edit Routine Blocks]        |
 +-----------------------------------------------------------------------------------------------+
@@ -36,9 +38,36 @@ Most productivity suites fail the people who need them most. When you live with 
 
 ---
 
+## ✨ What's New in v2.2.0 Pro Max Ultra
+
+Daily Compass v2.2.0 introduces **Sensory Audio Dictation ("Voice Scratchpad")**, a **7-Day Rolling Chrono-Strip Runway with Retrospective Day Inspection**, and **Curated Life-Setup Archetype Templates** with automatic snapshot rollback protection:
+
+### 1. 🎙️ Native Web Speech Recognition Audio Dictation ("Voice Scratchpad")
+- **100% Client-Side Voice Capture:** Zero audio leaves your computer or phone; powered entirely by native browser `SpeechRecognition` / `webkitSpeechRecognition` with zero cloud subscriptions or API keys.
+- **Smart Punctuation & Normalization Pipeline (`normalizeSpokenTranscript`):** Converts spoken keywords (*"period"*, *"comma"*, *"question mark"*, *"exclamation point"*, *"new line"*) into proper typographic marks and capitalizes sentences and the standalone pronoun *"I"*.
+- **Semantic Intent Auto-Tagger (`inferScratchpadTag`):** Accurately categorizes voice dumps into `#To-Buy`, `#To-Do`, `#Idea`, `#Later`, and `#Thought` based on conversational intent.
+- **Sensory Ergonomics:** Calming breathing lavender/mint sine pulse animation (`@keyframes calm-voice-breath`) completely replaces anxiety-provoking red recording dots.
+- **Instant Shortcuts:** Quick access via header microphone icon, Scratchpad modal button, `Alt + V` global hotkey, or `+voice` in the Omnibar.
+
+### 2. 📅 7-Day Rolling Chrono-Strip Runway & Retrospective Day Inspection
+- **Continuous 7-Day Temporal Strip:** Horizontal runway displaying the rolling window ($T-6 \dots T_0$) with completion micro-dots and historical daily spend badges.
+- **Non-Punitive Retrospective Day Inspection:** Tap yesterday or any past day to review historical metrics under an amber notification banner (`#retro-inspection-banner`).
+- **Unbroken Habit Streak Self-Healing (`toggleHabitForDate`):** Fell asleep without checking your evening habits? Tap yesterday, check the habit, and your streak automatically recalculates and self-heals backwards from today—without consuming a Streak Shield!
+- **1-Click Return to Today:** Click "Return to Today" or use the `+today` Omnibar command to snap back to the live anchor.
+
+### 3. 🧩 Curated Life-Setup Archetype Templates
+- **3 Turnkey Cognitive Cockpits Grounded in Research:**
+  - **ADHD Focus Navigator:** Paced for low-dopamine mornings, 50m Pomodoro sprints, mid-day sensory walks, 432 Hz Zen Bowl audio, 5 core habits, and a $45 daily budget cap.
+  - **Remote Freelancer:** Boundary defense for work-from-home pros: virtual commute walks, deep client execution blocks, gentle triad audio, and 17:00 hard work-tab shutdowns.
+  - **Gentle Recovery (Low Spoon):** Burnout and chronic fatigue pacing: 20% Gentle Mode by default, 432 Hz Tibetan Drone audio, and zero-guilt restorative micro-actions.
+- **Safe Merge Protocol (`applyLifeTemplate`):** Non-destructive merge imports archetype blocks and habits while strictly preserving all your existing transactions, debts, scratchpad notes, and medications.
+- **Automatic Snapshot Checkpoints:** The system automatically saves a checkpoint snapshot (`pre_archetype_install`) before applying, enabling instant 1-click rollback.
+
+---
+
 ## ✨ What's New in v2.1.0 Pro Max Plus
 
-Daily Compass v2.1.0 introduces **Temporal Sculpting**, **Sanctuary Privacy**, **Markdown Day Journals**, and **7-Day Rolling Trend Archiving** while remaining 100% zero-dependency and local-first:
+Daily Compass v2.1.0 introduced **Temporal Sculpting**, **Sanctuary Privacy**, **Markdown Day Journals**, and **7-Day Rolling Trend Archiving**:
 
 ### 1. ✏️ Interactive Routine Block & Micro-Step Editor
 - **Tactile Temporal Sculpting:** Directly create, edit, reorder, and delete daily routine blocks without touching raw JSON.
@@ -246,7 +275,7 @@ git commit -m "Release Daily Compass v2.1.0 Pro Max Plus"
 
 ## 🧪 Automated Testing
 
-Daily Compass includes **54 automated unit and integration tests** executing natively on Node.js using `node:test` (zero testing dependencies like Jest or Mocha required):
+Daily Compass includes **61 automated unit and integration tests** executing natively on Node.js using `node:test` (zero testing dependencies like Jest or Mocha required):
 
 ```bash
 # Execute comprehensive full test suite
