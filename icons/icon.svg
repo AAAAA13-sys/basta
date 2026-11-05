@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#222734" />
+      <stop offset="100%" stop-color="#141820" />
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#58a6ff" />
+      <stop offset="100%" stop-color="#3fb950" />
+    </linearGradient>
+    <linearGradient id="needleNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#58a6ff" />
+      <stop offset="100%" stop-color="#79c0ff" />
+    </linearGradient>
+    <linearGradient id="needleSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0883e" />
+      <stop offset="100%" stop-color="#ffa657" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#2d3546" stroke-width="4" />
+
+  <!-- Outer Dial Ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#2d3546" stroke-width="3" />
+  <circle cx="256" cy="256" r="160" fill="none" stroke="url(#ringGrad)" stroke-width="6" opacity="0.85" filter="url(#glow)" />
+
+  <!-- Compass Cardinal Markers -->
+  <line x1="256" y1="84" x2="256" y2="108" stroke="#58a6ff" stroke-width="4" stroke-linecap="round" />
+  <line x1="256" y1="404" x2="256" y2="428" stroke="#f0883e" stroke-width="4" stroke-linecap="round" />
+  <line x1="84" y1="256" x2="108" y2="256" stroke="#9aa5b5" stroke-width="4" stroke-linecap="round" />
+  <line x1="404" y1="256" x2="428" y2="256" stroke="#9aa5b5" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Compass Star Needle -->
+  <!-- North Needle (Sky Blue) -->
+  <polygon points="256,112 284,244 256,256" fill="url(#needleNorth)" />
+  <polygon points="256,112 228,244 256,256" fill="#388bfd" />
+
+  <!-- South Needle (Amber Gold) -->
+  <polygon points="256,400 284,268 256,256" fill="url(#needleSouth)" />
+  <polygon points="256,400 228,268 256,256" fill="#d29922" />
+
+  <!-- East & West Accents -->
+  <polygon points="400,256 268,228 256,256" fill="#484f58" />
+  <polygon points="400,256 268,284 256,256" fill="#30363d" />
+  <polygon points="112,256 244,228 256,256" fill="#484f58" />
+  <polygon points="112,256 244,284 256,256" fill="#30363d" />
+
+  <!-- Center Pivot -->
+  <circle cx="256" cy="256" r="22" fill="#181c24" stroke="#58a6ff" stroke-width="4" />
+  <circle cx="256" cy="256" r="10" fill="#e6edf3" />
+</svg>

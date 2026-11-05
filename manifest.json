@@ -1,0 +1,19 @@
+{
+  "name": "Daily Compass — All-in-One Life Tracker",
+  "short_name": "Daily Compass",
+  "description": "Calm, eye-friendly all-in-one daily tracker for alarms, cash flow, debt, habits, and focus grounding.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#181c24",
+  "theme_color": "#181c24",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "finance", "lifestyle", "utilities"]
+}
